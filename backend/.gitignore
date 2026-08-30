@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environment
+.venv/
+venv/
+
+# Environment secrets
+.env
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Model artifacts (large binary files)
+models/*.pkl
+models/*.joblib
+models/*.pt
+models/*.onnx
+
+# OS files
+.DS_Store
