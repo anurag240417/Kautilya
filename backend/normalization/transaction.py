@@ -46,7 +46,8 @@ def normalize_transactions(
 
         # Handle label mapping. Unknown is typically 3 in the dataset.
         # Use pandas isna to safely handle missing values.
-        label = None if pd.isna(getattr(row, "label", None)) else int(getattr(row, "label"))
+        label_val = getattr(row, "label", None)
+        label = None if pd.isna(label_val) else int(row.label)
 
         transaction_obj = Transaction(
             txid=row.txId,

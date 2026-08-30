@@ -117,6 +117,8 @@ def test_normalize_tx_tx_edges():
     assert edge.source_txid == 1
     assert edge.target_txid == 2
     assert edge.is_synthetic is False
+    assert edge.confidence == 1.0
+    assert edge.provenance == "elliptic_pp"
 
 
 def test_normalize_addr_tx_edges():
@@ -127,6 +129,8 @@ def test_normalize_addr_tx_edges():
     assert edge.input_address == "addr1"
     assert edge.txid == 99
     assert edge.is_synthetic is False
+    assert edge.confidence == 1.0
+    assert edge.provenance == "elliptic_pp"
 
 
 def test_normalize_tx_addr_edges():
@@ -137,6 +141,8 @@ def test_normalize_tx_addr_edges():
     assert edge.txid == 100
     assert edge.output_address == "addr2"
     assert edge.is_synthetic is False
+    assert edge.confidence == 1.0
+    assert edge.provenance == "elliptic_pp"
 
 
 def test_normalize_addr_addr_edges():
@@ -147,3 +153,6 @@ def test_normalize_addr_addr_edges():
     assert edge.input_address == "addr1"
     assert edge.output_address == "addr2"
     assert edge.is_synthetic is False
+    assert edge.confidence == 1.0
+    assert edge.provenance == "elliptic_pp"
+

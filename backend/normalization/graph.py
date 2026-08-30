@@ -5,7 +5,9 @@ Pydantic domain objects: ``TxTxEdge``, ``AddrTxEdge``,
 ``TxAddrEdge``, and ``AddrAddrEdge``.
 
 Forces ``is_synthetic=False`` on all records because
-the native Elliptic++ data is not synthetic.
+the native Elliptic++ data is not synthetic. Sets
+``provenance='elliptic_pp'`` and ``confidence=1.0``
+to explicitly identify the data source.
 """
 
 from collections.abc import Iterator
@@ -34,6 +36,8 @@ def normalize_tx_tx_edges(df: pd.DataFrame) -> Iterator[TxTxEdge]:
             source_txid=row.txId1,
             target_txid=row.txId2,
             is_synthetic=False,
+            confidence=1.0,
+            provenance="elliptic_pp",
         )
 
 
@@ -51,6 +55,8 @@ def normalize_addr_tx_edges(df: pd.DataFrame) -> Iterator[AddrTxEdge]:
             input_address=row.input_address,
             txid=row.txId,
             is_synthetic=False,
+            confidence=1.0,
+            provenance="elliptic_pp",
         )
 
 
@@ -68,6 +74,8 @@ def normalize_tx_addr_edges(df: pd.DataFrame) -> Iterator[TxAddrEdge]:
             txid=row.txId,
             output_address=row.output_address,
             is_synthetic=False,
+            confidence=1.0,
+            provenance="elliptic_pp",
         )
 
 
@@ -85,4 +93,7 @@ def normalize_addr_addr_edges(df: pd.DataFrame) -> Iterator[AddrAddrEdge]:
             input_address=row.input_address,
             output_address=row.output_address,
             is_synthetic=False,
+            confidence=1.0,
+            provenance="elliptic_pp",
         )
+

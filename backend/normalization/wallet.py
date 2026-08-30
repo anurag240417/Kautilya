@@ -45,7 +45,8 @@ def normalize_wallets(
     merged = pd.merge(df_features, df_classes, on="address", how="left")
 
     for row in merged.itertuples(index=False):
-        label = None if pd.isna(getattr(row, "label", None)) else int(getattr(row, "label"))
+        label_val = getattr(row, "label", None)
+        label = None if pd.isna(label_val) else int(row.label)
 
         wallet_obj = Wallet(
             address=row.address,
