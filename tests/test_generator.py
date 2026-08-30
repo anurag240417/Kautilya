@@ -13,18 +13,39 @@ import random
 from datetime import UTC, datetime, timedelta
 
 import networkx as nx
+import pandas as pd
+import pytest
 
+from backend.domain.experiment import GeneratorConfig
+from backend.domain.types import EntityClass, ScriptType
+from backend.generator.anomalies import generate_scenario_observations
+from backend.generator.export import (
+    export_ground_truth_to_csv,
+    export_observations_to_csv,
+    observations_to_dataframe,
+)
 from backend.generator.geoip import GeoIPResolver, GeoIPResult
+from backend.generator.ground_truth import GroundTruthRecord, GroundTruthTracker
 from backend.generator.node_pool import (
     NetworkNode,
     NodeType,
     generate_node_pool,
+)
+from backend.generator.pipeline import (
+    generate_synthetic_network_dataset,
+    validate_network_generation_results,
 )
 from backend.generator.propagation import (
     PropagationHop,
     generate_observations_for_transaction,
     pick_origin_node,
     simulate_propagation,
+)
+from backend.generator.scenarios import (
+    ScenarioParams,
+    ScenarioType,
+    get_all_scenario_types,
+    select_scenario,
 )
 from backend.generator.temporal import (
     get_all_step_mappings,
@@ -36,8 +57,6 @@ from backend.generator.topology import (
     get_neighbors,
     get_topology_stats,
 )
-
-import pytest
 
 
 # ===================================================================
@@ -701,3 +720,174 @@ class TestGeoIPResolver:
             result = resolver.lookup(node.ip)
             assert result.country == node.country
             assert result.asn == node.asn
+
+
+# ===================================================================
+# Scenarios & Anomalies Tests
+# ===================================================================
+
+
+class TestScenariosAndAnomalies:
+    """Tests for scenario selection and anomaly injection."""
+
+    def test_illicit_always_gets_anomalous_scenario(self):
+        rng = random.Random(42)
+        for _ in range(50):
+            scenario = select_scenario(EntityClass.ILLICIT, rng)
+            assert scenario.scenario_type != ScenarioType.NORMAL
+
+    def test_licit_mostly_gets_normal_scenario(self):
+        rng = random.Random(42)
+        normals = 0
+        trials = 100
+        for _ in range(trials):
+            scenario = select_scenario(EntityClass.LICIT, rng)
+            if scenario.scenario_type == ScenarioType.NORMAL:
+                normals += 1
+        assert normals >= 85
+
+    def test_get_all_scenario_types(self):
+        stypes = get_all_scenario_types()
+        assert len(stypes) >= 6
+        assert ScenarioType.TOR_ORIGIN in stypes
+
+    def test_generate_scenario_observations(self):
+        nodes = generate_node_pool(size=50, seed=42)
+        topo = build_topology(nodes, seed=42)
+        lookup = {n.node_id: n for n in nodes}
+        rng = random.Random(42)
+
+        scenario = select_scenario(EntityClass.ILLICIT, rng)
+        obs = generate_scenario_observations(
+            txid=1001,
+            time_step=5,
+            label=1,
+            scenario=scenario,
+            topology=topo,
+            nodes=nodes,
+            node_lookup=lookup,
+            rng=rng,
+            generation_run_id="test_run",
+            generator_version="0.1.0",
+        )
+        assert len(obs) > 0
+        assert obs[0].scenario_id == scenario.scenario_type.value
+        assert all(o.is_synthetic is True for o in obs)
+
+
+# ===================================================================
+# Ground Truth & Export Tests
+# ===================================================================
+
+
+class TestGroundTruthAndExport:
+    """Tests for GroundTruthTracker and export functions."""
+
+    def test_ground_truth_tracker(self):
+        tracker = GroundTruthTracker()
+        rec = tracker.record(
+            txid=5001,
+            time_step=12,
+            label=EntityClass.ILLICIT,
+            scenario_type=ScenarioType.TOR_ORIGIN,
+            origin_node_id=3,
+            origin_ip="185.220.101.4",
+            origin_country="DE",
+            origin_asn=24940,
+            generation_run_id="run_gt_test",
+        )
+        assert rec.is_anomalous is True
+        assert rec.is_synthetic is True
+        assert len(tracker) == 1
+
+        df = tracker.to_dataframe()
+        assert len(df) == 1
+        assert df.iloc[0]["txid"] == 5001
+        assert bool(df.iloc[0]["is_synthetic"]) is True
+
+    def test_export_observations_to_csv(self, tmp_path):
+        nodes = generate_node_pool(size=20, seed=42)
+        topo = build_topology(nodes, seed=42)
+        lookup = {n.node_id: n for n in nodes}
+        rng = random.Random(42)
+        obs = generate_observations_for_transaction(
+            txid=888, time_step=1, origin_node_id=0, topology=topo, node_lookup=lookup, rng=rng
+        )
+
+        out_csv = tmp_path / "obs.csv"
+        res_path = export_observations_to_csv(obs, out_csv)
+        assert res_path.exists()
+
+        loaded_df = pd.read_csv(out_csv)
+        assert len(loaded_df) == len(obs)
+        assert (loaded_df["is_synthetic"] == True).all()
+
+    def test_export_ground_truth_to_csv(self, tmp_path):
+        tracker = GroundTruthTracker()
+        tracker.record(
+            txid=101,
+            time_step=1,
+            label=EntityClass.LICIT,
+            scenario_type=ScenarioType.NORMAL,
+            origin_node_id=0,
+            origin_ip="1.2.3.4",
+        )
+        out_csv = tmp_path / "gt.csv"
+        export_ground_truth_to_csv(tracker, out_csv)
+        assert out_csv.exists()
+        loaded_df = pd.read_csv(out_csv)
+        assert len(loaded_df) == 1
+
+
+# ===================================================================
+# Full Pipeline Tests
+# ===================================================================
+
+
+class TestGeneratorPipeline:
+    """Tests for end-to-end generator pipeline."""
+
+    def test_full_pipeline_generation(self):
+        config = GeneratorConfig(
+            random_seed=42,
+            generator_version="0.1.0",
+            node_pool_size=100,
+        )
+        txs_data = pd.DataFrame(
+            [
+                {"txid": 1, "time_step": 1, "label": 1},  # Illicit
+                {"txid": 2, "time_step": 1, "label": 2},  # Licit
+                {"txid": 3, "time_step": 2, "label": 3},  # Unknown
+            ]
+        )
+
+        obs_df, gt_df, stats = generate_synthetic_network_dataset(
+            config=config,
+            txs_df=txs_data,
+            generation_run_id="pipeline_test_run",
+        )
+
+        assert len(obs_df) > 0
+        assert len(gt_df) == 3
+        assert (obs_df["is_synthetic"] == True).all()
+        assert stats["is_valid"] is True
+        assert stats["synthetic_provenance_verified"] is True
+        assert stats["unique_txids"] == 3
+
+    def test_pipeline_reproducibility(self):
+        config1 = GeneratorConfig(random_seed=123, generator_version="0.1.0", node_pool_size=50)
+        config2 = GeneratorConfig(random_seed=123, generator_version="0.1.0", node_pool_size=50)
+
+        txs_data = pd.DataFrame(
+            [
+                {"txid": 10, "time_step": 5, "label": 1},
+                {"txid": 20, "time_step": 5, "label": 2},
+            ]
+        )
+
+        obs_df1, gt_df1, _ = generate_synthetic_network_dataset(config1, txs_data)
+        obs_df2, gt_df2, _ = generate_synthetic_network_dataset(config2, txs_data)
+
+        pd.testing.assert_frame_equal(obs_df1, obs_df2)
+        pd.testing.assert_frame_equal(gt_df1, gt_df2)
+
