@@ -3,6 +3,7 @@ lxml>=4.9.0
 networkx>=3.0
 pandas>=2.0
 pydantic>=2.0
+scipy>=1.11.0
 
 # Dev
 pytest>=7.0

@@ -8,6 +8,7 @@ dependencies = [
     "networkx>=3.0",
     "pandas>=2.0",
     "pydantic>=2.0",
+    "scipy>=1.11.0",
 ]
 
 [project.optional-dependencies]
