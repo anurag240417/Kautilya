@@ -758,7 +758,7 @@ class TestScenariosAndAnomalies:
         rng = random.Random(42)
 
         scenario = select_scenario(EntityClass.ILLICIT, rng)
-        obs = generate_scenario_observations(
+        obs, origin_id = generate_scenario_observations(
             txid=1001,
             time_step=5,
             label=1,
@@ -771,6 +771,7 @@ class TestScenariosAndAnomalies:
             generator_version="0.1.0",
         )
         assert len(obs) > 0
+        assert 0 <= origin_id < len(nodes)
         assert obs[0].scenario_id == scenario.scenario_type.value
         assert all(o.is_synthetic is True for o in obs)
 

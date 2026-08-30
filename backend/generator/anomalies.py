@@ -61,7 +61,7 @@ def generate_scenario_observations(
     rng: random.Random,
     generation_run_id: str | None = None,
     generator_version: str | None = None,
-) -> list[NetworkObservation]:
+) -> tuple[list[NetworkObservation], int]:
     """Generate network observations for a transaction using a specific scenario.
 
     Applies the scenario's parameters (preferred origin, fan-out, delays,
@@ -80,7 +80,7 @@ def generate_scenario_observations(
         generator_version: Generator version (provenance).
 
     Returns:
-        List of ``NetworkObservation`` records for this transaction.
+        Tuple of (list of NetworkObservation records, origin_node_id).
     """
     # Select origin node based on scenario preference
     origin_id = pick_origin_node(
@@ -108,4 +108,4 @@ def generate_scenario_observations(
         generator_version=generator_version,
     )
 
-    return observations
+    return observations, origin_id

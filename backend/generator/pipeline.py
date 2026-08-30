@@ -170,7 +170,7 @@ def generate_synthetic_network_dataset(
         scenario = select_scenario(entity_label, rng)
 
         # Generate observations for this transaction
-        obs_list = generate_scenario_observations(
+        obs_list, origin_node_id = generate_scenario_observations(
             txid=txid,
             time_step=time_step,
             label=int(entity_label) if entity_label else None,
@@ -186,22 +186,17 @@ def generate_synthetic_network_dataset(
         all_observations.extend(obs_list)
 
         # Record ground truth
-        origin_node_id = obs_list[0].dst_ip if obs_list else ""  # safe check
-        origin_node = (
-            node_lookup.get(obs_list[0].src_port) if obs_list else None
-        )  # fallback
-        # Let's get origin node from first hop or node pool selection
-        # Note: obs_list[0].src_ip is origin IP
-        origin_ip = obs_list[0].src_ip if obs_list else ""
-        origin_country = obs_list[0].country if obs_list else None
-        origin_asn = obs_list[0].asn if obs_list else None
+        origin_node = node_lookup.get(origin_node_id)
+        origin_ip = origin_node.ip if origin_node else (obs_list[0].src_ip if obs_list else "")
+        origin_country = origin_node.country if origin_node else (obs_list[0].country if obs_list else None)
+        origin_asn = origin_node.asn if origin_node else (obs_list[0].asn if obs_list else None)
 
         gt_tracker.record(
             txid=txid,
             time_step=time_step,
             label=entity_label,
             scenario_type=scenario.scenario_type,
-            origin_node_id=0,  # node index
+            origin_node_id=origin_node_id,
             origin_ip=origin_ip,
             origin_country=origin_country,
             origin_asn=origin_asn,
