@@ -1,0 +1,14 @@
+# Documentation (agent-specific, not version-controlled)
+AGENTS.md
+ARCHITECTURE.md
+CODING_CONVENTIONS.md
+CONTEXT.md
+DATASET.md
+TASKS.md
+
+# Datasets (large files, not version-controlled)
+dataset/
+
+# OS files
+.DS_Store
+Thumbs.db

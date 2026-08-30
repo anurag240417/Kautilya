@@ -1,0 +1,23 @@
+target-version = "py311"
+line-length = 99
+
+[lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "ANN",  # flake8-annotations (public functions)
+]
+ignore = [
+    "ANN204",  # missing return type for __init__
+]
+
+[lint.per-file-ignores]
+"tests/*" = ["ANN"]  # don't require type hints in tests
+
+[lint.isort]
+known-first-party = ["backend"]

@@ -1,0 +1,30 @@
+[project]
+name = "chaintrace"
+version = "0.1.0"
+description = "Blockchain and network forensics investigation platform"
+requires-python = ">=3.11"
+dependencies = [
+    "lxml>=4.9.0",
+    "networkx>=3.0",
+    "pandas>=2.0",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "ruff>=0.5.0",
+]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["backend*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
