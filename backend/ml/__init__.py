@@ -5,8 +5,10 @@ and clustering. Training and inference must remain separate.
 Training must not execute during API requests.
 """
 
+from .anomaly import AnomalyDetector
 from .classifier import TransactionClassifier
 from .dataset import load_transaction_dataset, prepare_ml_splits
+from .evaluation import TemporalEvaluation, evaluate_temporal, summarize_evaluation
 from .feature_registry import (
     ALL_TX_FEATURES,
     ALL_WALLET_FEATURES,
@@ -24,15 +26,22 @@ from .feature_registry import (
     WALLET_SCALAR_FEATURES,
     WALLET_STATS_FEATURES,
 )
+from .graph_features import extract_graph_feature_df, merge_graph_features
 from .leakage import LeakageAuditResult, audit_leakage
 from .splitting import temporal_train_test_split
 
 __all__ = [
+    # Anomaly
+    "AnomalyDetector",
     # Classifier
     "TransactionClassifier",
     # Dataset
     "load_transaction_dataset",
     "prepare_ml_splits",
+    # Evaluation
+    "TemporalEvaluation",
+    "evaluate_temporal",
+    "summarize_evaluation",
     # Feature registry
     "ALL_TX_FEATURES",
     "ALL_WALLET_FEATURES",
@@ -49,6 +58,9 @@ __all__ = [
     "TRAIN_LABELS",
     "WALLET_SCALAR_FEATURES",
     "WALLET_STATS_FEATURES",
+    # Graph features
+    "extract_graph_feature_df",
+    "merge_graph_features",
     # Splitting
     "temporal_train_test_split",
     # Leakage
