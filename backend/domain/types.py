@@ -68,3 +68,13 @@ class ExplanationType(StrEnum):
 
     CLASSIFIER_EXPLANATION = "classifier_explanation"
     ANOMALY_EXPLANATION = "anomaly_explanation"
+
+
+class AlertStatus(StrEnum):
+    """Lifecycle status for investigative alerts."""
+
+    NEW = "new"
+    TRIAGED = "triaged"
+    IN_REVIEW = "in_review"
+    ESCALATED = "escalated"
+    DISMISSED = "dismissed"

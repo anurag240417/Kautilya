@@ -15,6 +15,13 @@ from .evidence import (
     build_evidence_ledger,
     generate_narrative_explanation,
 )
+from .ranking import (
+    TIER_SEVERITY,
+    filter_and_prioritize_alerts,
+    generate_alert,
+    generate_entity_alert,
+    rank_entities,
+)
 from .scorer import (
     DEFAULT_SYNTHESIS_CONFIG,
     DEFAULT_TIER_CONFIG,
@@ -45,4 +52,10 @@ __all__ = [
     "EntityAggregation",
     "TransactionContribution",
     "aggregate_transaction_scores",
+    # Ranking & Alert Prioritization
+    "TIER_SEVERITY",
+    "generate_alert",
+    "generate_entity_alert",
+    "rank_entities",
+    "filter_and_prioritize_alerts",
 ]

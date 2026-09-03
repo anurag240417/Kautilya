@@ -4,6 +4,12 @@ Canonical data schemas used across all pipeline modules.
 All models use Pydantic v2 for validation and serialization.
 """
 
+from backend.domain.alert import (
+    AlertFilter,
+    InvestigativeAlert,
+    RankedEntity,
+    RankingCriteria,
+)
 from backend.domain.correlation import (
     CandidateIPRole,
     CorrelationConfidenceMetrics,
@@ -24,6 +30,7 @@ from backend.domain.risk import (
 )
 from backend.domain.transaction import Transaction, TransactionFeatures
 from backend.domain.types import (
+    AlertStatus,
     EntityClass,
     EvidenceType,
     ExplanationType,
@@ -34,6 +41,7 @@ from backend.domain.wallet import StatsSummary, Wallet
 
 __all__ = [
     # Enums
+    "AlertStatus",
     "EntityClass",
     "EvidenceType",
     "ExplanationType",
@@ -64,6 +72,11 @@ __all__ = [
     "Evidence",
     "EvidenceRecord",
     "EvidenceLedger",
+    # Alerts & Ranking
+    "InvestigativeAlert",
+    "RankedEntity",
+    "AlertFilter",
+    "RankingCriteria",
     # Configuration
     "ExperimentConfig",
     "GeneratorConfig",
