@@ -10,6 +10,7 @@ from collections.abc import Iterator
 import pandas as pd
 
 from backend.domain.network import NetworkObservation
+from backend.normalization.temporal import normalize_timestamp
 
 
 def normalize_network_observations(df: pd.DataFrame) -> Iterator[NetworkObservation]:
@@ -29,7 +30,7 @@ def normalize_network_observations(df: pd.DataFrame) -> Iterator[NetworkObservat
             src_port=row.src_port,
             dst_port=row.dst_port,
             protocol=getattr(row, "protocol", None),
-            timestamp=row.timestamp,
+            timestamp=normalize_timestamp(row.timestamp),
             asn=getattr(row, "asn", None),
             country=getattr(row, "country", None),
             script_type=getattr(row, "script_type", None),

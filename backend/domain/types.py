@@ -41,3 +41,30 @@ class EvidenceType(StrEnum):
     CORRELATION = "correlation"
     MODEL_PREDICTION = "model_prediction"
     RISK_ASSESSMENT = "risk_assessment"
+
+
+class PriorityTier(StrEnum):
+    """Investigative alert priority tiers.
+
+    Used to organize investigator triage queues according to urgency.
+    """
+
+    CRITICAL = "critical"
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+
+
+class ExplanationType(StrEnum):
+    """Distinguishes classifier explanations from anomaly explanations.
+
+    Per AGENTS.md §3.5:
+    - CLASSIFIER_EXPLANATION: Explains why the model assigned a specific
+      predicted_label or illicit_probability.
+    - ANOMALY_EXPLANATION: Explains why an observation is statistically
+      unusual relative to the learned baseline. Must NEVER be presented
+      as an explanation of illicitness unless independently supported.
+    """
+
+    CLASSIFIER_EXPLANATION = "classifier_explanation"
+    ANOMALY_EXPLANATION = "anomaly_explanation"
