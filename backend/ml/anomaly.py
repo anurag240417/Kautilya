@@ -47,6 +47,8 @@ class AnomalyDetector:
         contamination: float = 0.1,
         n_estimators: int = 200,
         random_state: int = 42,
+        feature_names: list[str] | None = None,
+        feature_medians: dict[str, float] | None = None,
     ) -> None:
         """Initialize the anomaly detector.
 
@@ -55,9 +57,13 @@ class AnomalyDetector:
             contamination: Expected proportion of anomalies (default 10%).
             n_estimators: Number of trees in the isolation forest.
             random_state: Random seed for reproducibility.
+            feature_names: Optional list of feature column names.
+            feature_medians: Optional dictionary of feature median values for imputation.
         """
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
         self.model_version = model_version or f"iforest_v1_{timestamp}"
+        self.feature_names: list[str] = list(feature_names) if feature_names else []
+        self.feature_medians: dict[str, float] = dict(feature_medians) if feature_medians else {}
         self.is_fitted: bool = False
 
         self._contamination = contamination
@@ -189,6 +195,8 @@ class AnomalyDetector:
             "contamination": self._contamination,
             "n_estimators": self._n_estimators,
             "random_state": self._random_state,
+            "feature_names": self.feature_names,
+            "feature_medians": self.feature_medians,
             "saved_at": datetime.now(timezone.utc).isoformat(),
         }
 
@@ -230,6 +238,8 @@ class AnomalyDetector:
             contamination=metadata.get("contamination", 0.1),
             n_estimators=metadata.get("n_estimators", 200),
             random_state=metadata.get("random_state", 42),
+            feature_names=metadata.get("feature_names", []),
+            feature_medians=metadata.get("feature_medians", {}),
         )
         instance._model = joblib.load(model_path)
         instance.is_fitted = True

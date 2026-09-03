@@ -50,6 +50,7 @@ class TransactionClassifier:
         n_estimators: int = 200,
         random_state: int = 42,
         class_weight: str = "balanced",
+        feature_medians: dict[str, float] | None = None,
     ) -> None:
         """Initialize the classifier.
 
@@ -59,11 +60,14 @@ class TransactionClassifier:
             n_estimators: Number of trees in the random forest.
             random_state: Random seed for reproducibility.
             class_weight: Class weighting strategy.
+            feature_medians: Optional dictionary mapping feature names to median values
+                used for missing value imputation during training/inference.
         """
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
         self.model_version = model_version or f"rf_{feature_set_name}_v1_{timestamp}"
         self.feature_set_name = feature_set_name
         self.feature_names: list[str] = []
+        self.feature_medians: dict[str, float] = dict(feature_medians) if feature_medians else {}
         self.is_fitted: bool = False
 
         self._model = RandomForestClassifier(
@@ -266,6 +270,7 @@ class TransactionClassifier:
             "model_version": self.model_version,
             "feature_set_name": self.feature_set_name,
             "feature_names": self.feature_names,
+            "feature_medians": self.feature_medians,
             "n_features": len(self.feature_names) if self.feature_names else self._model.n_features_in_,
             "n_estimators": self._n_estimators,
             "random_state": self._random_state,
@@ -320,6 +325,7 @@ class TransactionClassifier:
             n_estimators=metadata.get("n_estimators", 200),
             random_state=metadata.get("random_state", 42),
             class_weight=metadata.get("class_weight", "balanced"),
+            feature_medians=metadata.get("feature_medians", {}),
         )
 
         # Load the fitted model

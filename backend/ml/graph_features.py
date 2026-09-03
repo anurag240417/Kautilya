@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 def extract_graph_feature_df(
     graph: ChainTraceGraph,
     transaction_ids: list | None = None,
+    betweenness_k: int | None = None,
 ) -> pd.DataFrame:
     """Extract graph features for transactions into a DataFrame.
 
@@ -39,6 +40,8 @@ def extract_graph_feature_df(
         graph: The ChainTrace investigation graph.
         transaction_ids: Optional list of transaction IDs to extract
             features for. If None, extracts for all transaction nodes.
+        betweenness_k: Number of source nodes to sample for approximate
+            betweenness centrality. If None, computes exact centrality.
 
     Returns:
         DataFrame with ``txId`` column plus the 8 graph feature columns.
@@ -50,7 +53,7 @@ def extract_graph_feature_df(
 
     # Compute graph-wide metrics once
     pagerank = compute_pagerank(graph)
-    betweenness = compute_betweenness_centrality(graph)
+    betweenness = compute_betweenness_centrality(graph, k=betweenness_k)
     clustering = compute_clustering_coefficients(graph)
     hubs, authorities = compute_hits(graph)
 

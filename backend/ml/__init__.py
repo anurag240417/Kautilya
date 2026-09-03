@@ -26,7 +26,12 @@ from .feature_registry import (
     WALLET_SCALAR_FEATURES,
     WALLET_STATS_FEATURES,
 )
-from .graph_features import extract_graph_feature_df, merge_graph_features
+from .inference import (
+    MLInferencePipeline,
+    find_latest_model,
+    load_anomaly_detector,
+    load_classifier,
+)
 from .leakage import LeakageAuditResult, audit_leakage
 from .splitting import temporal_train_test_split
 
@@ -35,6 +40,11 @@ __all__ = [
     "AnomalyDetector",
     # Classifier
     "TransactionClassifier",
+    # Inference
+    "MLInferencePipeline",
+    "find_latest_model",
+    "load_classifier",
+    "load_anomaly_detector",
     # Dataset
     "load_transaction_dataset",
     "prepare_ml_splits",
