@@ -42,14 +42,14 @@ def find_latest_model(models_dir: Path, prefix: str) -> Path | None:
 
 
 def load_classifier(
-    models_dir: Path | None = None,
     feature_set_name: str = "M1",
+    models_dir: Path | str | None = None,
 ) -> TransactionClassifier:
     """Load the latest trained classifier for a given feature set.
 
     Args:
-        models_dir: Directory containing model files. Defaults to settings.
         feature_set_name: Feature configuration ('M1', 'M2', 'M3').
+        models_dir: Directory containing model files. Defaults to settings.
 
     Returns:
         Fitted TransactionClassifier.
@@ -58,7 +58,11 @@ def load_classifier(
         FileNotFoundError: If no matching model is found.
     """
     settings = get_settings()
-    target_dir = models_dir or settings.models_dir
+    if models_dir is not None:
+        target_dir = Path(models_dir)
+    else:
+        target_dir = settings.models_dir
+
     model_path = find_latest_model(target_dir, f"rf_{feature_set_name}")
 
     if model_path is None:
@@ -70,7 +74,7 @@ def load_classifier(
 
 
 def load_anomaly_detector(
-    models_dir: Path | None = None,
+    models_dir: Path | str | None = None,
 ) -> AnomalyDetector:
     """Load the latest trained anomaly detector.
 
@@ -84,7 +88,11 @@ def load_anomaly_detector(
         FileNotFoundError: If no anomaly detector model is found.
     """
     settings = get_settings()
-    target_dir = models_dir or settings.models_dir
+    if models_dir is not None:
+        target_dir = Path(models_dir)
+    else:
+        target_dir = settings.models_dir
+
     model_path = find_latest_model(target_dir, "iforest")
 
     if model_path is None:
