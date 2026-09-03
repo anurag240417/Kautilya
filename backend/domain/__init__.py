@@ -23,13 +23,20 @@ from backend.domain.risk import (
     SignalInput,
 )
 from backend.domain.transaction import Transaction, TransactionFeatures
-from backend.domain.types import EntityClass, EvidenceType, PriorityTier, ScriptType
+from backend.domain.types import (
+    EntityClass,
+    EvidenceType,
+    ExplanationType,
+    PriorityTier,
+    ScriptType,
+)
 from backend.domain.wallet import StatsSummary, Wallet
 
 __all__ = [
     # Enums
     "EntityClass",
     "EvidenceType",
+    "ExplanationType",
     "ScriptType",
     "CandidateIPRole",
     "PriorityTier",

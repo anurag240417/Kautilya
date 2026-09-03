@@ -13,7 +13,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from backend.domain.types import EntityClass, EvidenceType, PriorityTier
+from backend.domain.types import EntityClass, EvidenceType, ExplanationType, PriorityTier
 
 
 class EvidenceCategory(StrEnum):
@@ -127,6 +127,13 @@ class EvidenceRecord(BaseModel):
     provenance: str | None = Field(
         default=None, description="Source system, model version, or generator run ID"
     )
+    explanation_type: ExplanationType | None = Field(
+        default=None,
+        description=(
+            "Distinguishes classifier explanations from anomaly explanations. "
+            "Required for ML_BEHAVIORAL and ANOMALY categories."
+        ),
+    )
 
 
 class EvidenceLedger(BaseModel):
@@ -182,6 +189,10 @@ class RiskScore(BaseModel):
     priority_tier: PriorityTier = Field(
         default=PriorityTier.LOW,
         description="Configurable priority tier (Critical, High, Medium, Low)",
+    )
+    tier_description: str | None = Field(
+        default=None,
+        description="Human-readable description of why this tier applies",
     )
 
     # Decomposed component signals [0.0, 1.0]

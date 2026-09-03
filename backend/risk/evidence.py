@@ -9,11 +9,15 @@ Forensic Rules:
        dimensions (volume, fees, size, degree, relay hops).
     2. Anonymized feature names (`Local_feature_*`, `Aggregate_feature_*`)
        must NEVER appear in human-facing explanations.
-    3. Anomaly explanations MUST clearly state that deviance indicates
-       novelty, not confirmed illicitness.
-    4. Graph explanations MUST state that graph proximity or centrality alone
+    3. Classifier explanations (CLASSIFIER_EXPLANATION) must explain why
+       the model assigned the specific predicted_label or illicit_probability.
+    4. Anomaly explanations (ANOMALY_EXPLANATION) must explain why an
+       observation is statistically unusual relative to the learned baseline.
+       An anomaly explanation must NEVER be presented as an explanation of
+       illicitness unless independently supported by classifier evidence.
+    5. Graph explanations MUST state that graph proximity or centrality alone
        does not prove guilt.
-    5. Synthetic network and correlation records MUST carry `is_synthetic=True`
+    6. Synthetic network and correlation records MUST carry `is_synthetic=True`
        and explicit non-attribution disclaimers.
 """
 
@@ -28,7 +32,7 @@ from backend.domain.correlation import (
 from backend.domain.ml import MLScore
 from backend.domain.risk import EvidenceCategory, EvidenceLedger, EvidenceRecord
 from backend.domain.transaction import Transaction
-from backend.domain.types import EntityClass, EvidenceType
+from backend.domain.types import EntityClass, EvidenceType, ExplanationType
 
 
 def _format_btc_amount(amount: float | None) -> str:
@@ -93,41 +97,73 @@ def build_evidence_ledger(
 
         pct = prob * 100.0
 
-        behavioral_narratives: list[str] = [
-            f"Supervised model ({ml_score.model_version}) classified this transaction as "
-            f"{pred_label_name} with an illicit probability of {pct:.1f}%."
-        ]
-
         metrics: dict[str, Any] = {
             "predicted_label": pred_value,
             "illicit_probability": prob,
             "model_version": ml_score.model_version,
         }
 
-        # Enrich with known interpretable transaction attributes (never anonymized columns)
+        # Build classifier-specific explanation: why did the model assign this label?
+        classifier_rationale_parts: list[str] = []
+        if prob >= 0.70:
+            classifier_rationale_parts.append(
+                f"The model assigned a high illicit probability ({pct:.1f}%) "
+                "based on learned behavioral patterns in the training data."
+            )
+        elif prob >= 0.40:
+            classifier_rationale_parts.append(
+                f"The model assigned a moderate illicit probability ({pct:.1f}%), "
+                "indicating mixed signals in the learned behavioral patterns."
+            )
+        else:
+            classifier_rationale_parts.append(
+                f"The model assigned a low illicit probability ({pct:.1f}%), "
+                "suggesting the transaction aligns with typical licit patterns."
+            )
+
+        # Enrich with known interpretable dimensions that influenced the model
         if tx is not None:
+            feature_contributions: list[str] = []
             if tx.total_btc is not None:
                 metrics["total_btc"] = tx.total_btc
-                behavioral_narratives.append(
-                    f"Total value transferred is {_format_btc_amount(tx.total_btc)}."
+                feature_contributions.append(
+                    f"total value of {_format_btc_amount(tx.total_btc)}"
                 )
             if tx.fees is not None:
                 metrics["fees"] = tx.fees
-                behavioral_narratives.append(
-                    f"Transaction fee is {_format_btc_amount(tx.fees)}."
+                feature_contributions.append(
+                    f"transaction fee of {_format_btc_amount(tx.fees)}"
                 )
-            if tx.num_input_addresses is not None and tx.num_output_addresses is not None:
+            if (
+                tx.num_input_addresses is not None
+                and tx.num_output_addresses is not None
+            ):
                 metrics["inputs"] = tx.num_input_addresses
                 metrics["outputs"] = tx.num_output_addresses
-                behavioral_narratives.append(
-                    f"Involves {int(tx.num_input_addresses)} input address(es) and "
-                    f"{int(tx.num_output_addresses)} output address(es)."
+                feature_contributions.append(
+                    f"{int(tx.num_input_addresses)} input(s) and "
+                    f"{int(tx.num_output_addresses)} output(s)"
+                )
+            if feature_contributions:
+                classifier_rationale_parts.append(
+                    "Key interpretable features: "
+                    + ", ".join(feature_contributions) + "."
                 )
 
         if interpretable_features:
             for k, v in interpretable_features.items():
-                if not k.startswith("Local_feature_") and not k.startswith("Aggregate_feature_"):
+                if (
+                    not k.startswith("Local_feature_")
+                    and not k.startswith("Aggregate_feature_")
+                ):
                     metrics[k] = v
+
+        classifier_description = (
+            f"Supervised model ({ml_score.model_version}) classified "
+            f"this transaction as {pred_label_name} with an illicit "
+            f"probability of {pct:.1f}%. "
+            + " ".join(classifier_rationale_parts)
+        )
 
         ledger.add_record(
             EvidenceRecord(
@@ -136,16 +172,20 @@ def build_evidence_ledger(
                 evidence_type=EvidenceType.MODEL_PREDICTION,
                 source_entity_id=str(entity_id),
                 source_entity_type=entity_type,
-                headline=f"Supervised Classification: {pred_label_name} ({pct:.1f}% likelihood)",
-                description=" ".join(behavioral_narratives),
+                headline=(
+                    f"Supervised Classification: "
+                    f"{pred_label_name} ({pct:.1f}% likelihood)"
+                ),
+                description=classifier_description,
                 supporting_metrics=metrics,
                 confidence=prob,
                 is_synthetic=False,
                 provenance=f"classifier_{ml_score.model_version}",
+                explanation_type=ExplanationType.CLASSIFIER_EXPLANATION,
             )
         )
 
-    # 2. Anomaly Evidence (Statistical Novelty)
+    # 2. Anomaly Evidence (Statistical Novelty — ANOMALY_EXPLANATION)
     if anomaly_score is not None:
         pct_anomaly = anomaly_score * 100.0
         if anomaly_score >= 0.75:
@@ -155,6 +195,18 @@ def build_evidence_ledger(
         else:
             severity = "low statistical deviance"
 
+        # Anomaly explanation: explains WHY this is statistically unusual,
+        # NOT why it is illicit. Per AGENTS.md §3.5, an anomaly explanation
+        # must NEVER be presented as an explanation of illicitness.
+        anomaly_description = (
+            f"Observation exhibits {severity} relative to the learned "
+            f"baseline distribution (deviance score: {anomaly_score:.2f}). "
+            "This means the transaction's behavioral pattern differs from "
+            "what the model learned as typical. Important: Anomaly detection "
+            "measures statistical novelty, NOT confirmed illicit activity. "
+            "A high anomaly score indicates unusual behavior, not guilt."
+        )
+
         ledger.add_record(
             EvidenceRecord(
                 evidence_id=f"ev-anom-{uuid.uuid4().hex[:8]}",
@@ -162,17 +214,19 @@ def build_evidence_ledger(
                 evidence_type=EvidenceType.MODEL_PREDICTION,
                 source_entity_id=str(entity_id),
                 source_entity_type=entity_type,
-                headline=f"Statistical Anomaly Detection: {severity} ({pct_anomaly:.1f}%)",
-                description=(
-                    f"Observation exhibits {severity} relative to the learned baseline "
-                    f"distribution (deviance score: {anomaly_score:.2f}). Important: Anomaly "
-                    "detection measures statistical novelty, NOT confirmed illicit "
-                    "activity."
+                headline=(
+                    f"Statistical Anomaly Detection: "
+                    f"{severity} ({pct_anomaly:.1f}%)"
                 ),
-                supporting_metrics={"anomaly_score": anomaly_score, "severity": severity},
+                description=anomaly_description,
+                supporting_metrics={
+                    "anomaly_score": anomaly_score,
+                    "severity": severity,
+                },
                 confidence=anomaly_score,
                 is_synthetic=False,
                 provenance="isolation_forest_anomaly_detector",
+                explanation_type=ExplanationType.ANOMALY_EXPLANATION,
             )
         )
 
@@ -330,16 +384,57 @@ def build_evidence_ledger(
 
 
 def generate_narrative_explanation(ledger: EvidenceLedger) -> str:
-    """Generate a coherent, plain-language summary paragraph from an EvidenceLedger."""
+    """Generate a coherent, plain-language summary paragraph from an EvidenceLedger.
+
+    Structurally separates classifier explanations (why the model assigned
+    a specific label) from anomaly explanations (why a record is statistically
+    unusual) per AGENTS.md §3.5.
+    """
     if not ledger.records:
         return "No specific evidence recorded for this entity."
 
-    parts: list[str] = [f"Investigative review for {ledger.entity_type} {ledger.entity_id}:"]
+    parts: list[str] = [
+        f"Investigative review for {ledger.entity_type} "
+        f"{ledger.entity_id}:"
+    ]
 
-    for r in ledger.records:
-        parts.append(f"• {r.headline}: {r.description}")
+    # Group by explanation type for structural separation
+    classifier_records = [
+        r for r in ledger.records
+        if r.explanation_type == ExplanationType.CLASSIFIER_EXPLANATION
+    ]
+    anomaly_records = [
+        r for r in ledger.records
+        if r.explanation_type == ExplanationType.ANOMALY_EXPLANATION
+    ]
+    other_records = [
+        r for r in ledger.records
+        if r.explanation_type is None
+    ]
+
+    if classifier_records:
+        parts.append("")
+        parts.append("— Classifier Findings (why the model assigned this label):")
+        for r in classifier_records:
+            parts.append(f"  • {r.headline}: {r.description}")
+
+    if anomaly_records:
+        parts.append("")
+        parts.append(
+            "— Anomaly Findings (statistical novelty, "
+            "NOT proof of illicit activity):"
+        )
+        for r in anomaly_records:
+            parts.append(f"  • {r.headline}: {r.description}")
+
+    if other_records:
+        parts.append("")
+        parts.append("— Additional Evidence:")
+        for r in other_records:
+            parts.append(f"  • {r.headline}: {r.description}")
 
     if ledger.has_synthetic_evidence():
+        parts.append("")
         parts.append(
             "(Contains synthetic network/temporal evidence. Temporal alignment "
             "does not imply real-world ownership)."

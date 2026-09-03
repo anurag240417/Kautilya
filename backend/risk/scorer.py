@@ -36,6 +36,72 @@ class SynthesisPolicy(StrEnum):
 
 
 @dataclass(frozen=True)
+class PriorityTierDefinition:
+    """Definition of a single investigative priority tier."""
+
+    tier: PriorityTier
+    min_score: float
+    description: str
+
+
+@dataclass(frozen=True)
+class PriorityTierConfig:
+    """Configurable priority tier definitions.
+
+    Defines how continuous risk scores (0–100) map to investigative
+    priority tiers. Tiers are evaluated in order from highest to lowest;
+    the first tier whose min_score is met is assigned.
+
+    Default tiers:
+        CRITICAL ≥ 80: Requires immediate investigator attention
+        HIGH     ≥ 60: Should be reviewed promptly
+        MEDIUM   ≥ 40: May warrant further analysis
+        LOW      < 40: Routine / no immediate concern
+    """
+
+    tiers: tuple[PriorityTierDefinition, ...] = (
+        PriorityTierDefinition(
+            tier=PriorityTier.CRITICAL,
+            min_score=80.0,
+            description=(
+                "Requires immediate investigator attention; "
+                "multiple corroborating signals present"
+            ),
+        ),
+        PriorityTierDefinition(
+            tier=PriorityTier.HIGH,
+            min_score=60.0,
+            description="Should be reviewed promptly",
+        ),
+        PriorityTierDefinition(
+            tier=PriorityTier.MEDIUM,
+            min_score=40.0,
+            description="May warrant further analysis",
+        ),
+        PriorityTierDefinition(
+            tier=PriorityTier.LOW,
+            min_score=0.0,
+            description="Routine; no immediate concern",
+        ),
+    )
+
+    def determine_tier(self, score: float) -> PriorityTierDefinition:
+        """Map a continuous risk score to its priority tier definition.
+
+        Tiers are evaluated highest-first; the first tier whose
+        min_score threshold is met is returned.
+        """
+        for tier_def in self.tiers:
+            if score >= tier_def.min_score:
+                return tier_def
+        # Fallback to last tier (should always be LOW with min_score=0)
+        return self.tiers[-1]
+
+
+DEFAULT_TIER_CONFIG = PriorityTierConfig()
+
+
+@dataclass(frozen=True)
 class SynthesisConfig:
     """Configurable weights, thresholds, and caps for risk synthesis."""
 
@@ -48,10 +114,10 @@ class SynthesisConfig:
     correlation_weight: float = 0.20
     known_indicator_weight: float = 0.40
 
-    # Priority tier boundary thresholds on [0.0, 100.0] scale
-    critical_threshold: float = 80.0
-    high_threshold: float = 60.0
-    medium_threshold: float = 40.0
+    # Configurable priority tier definitions
+    tier_config: PriorityTierConfig = field(
+        default_factory=PriorityTierConfig
+    )
 
     # Safety cap for anomaly scores lacking corroboration
     uncorroborated_anomaly_cap: float = 60.0
@@ -66,15 +132,11 @@ class SynthesisConfig:
 DEFAULT_SYNTHESIS_CONFIG = SynthesisConfig()
 
 
-def determine_priority_tier(score: float, config: SynthesisConfig) -> PriorityTier:
+def determine_priority_tier(
+    score: float, config: SynthesisConfig
+) -> PriorityTier:
     """Map continuous risk score (0–100) to an investigative priority tier."""
-    if score >= config.critical_threshold:
-        return PriorityTier.CRITICAL
-    if score >= config.high_threshold:
-        return PriorityTier.HIGH
-    if score >= config.medium_threshold:
-        return PriorityTier.MEDIUM
-    return PriorityTier.LOW
+    return config.tier_config.determine_tier(score).tier
 
 
 def synthesize_risk_score(
@@ -179,7 +241,8 @@ def synthesize_risk_score(
             raw_score = min(100.0, raw_score * 1.10)
 
     final_score = round(max(0.0, min(100.0, float(raw_score))), 2)
-    tier = determine_priority_tier(final_score, cfg)
+    tier_def = cfg.tier_config.determine_tier(final_score)
+    tier = tier_def.tier
 
     # Provenance tracking: includes synthetic if inputs rely on synthetic data or correlation
     has_synthetic = (
@@ -197,13 +260,16 @@ def synthesize_risk_score(
             "confirmed illicit classification."
         )
     if has_synthetic:
-        explanation_parts.append("(Includes synthetic network or temporal correlation signals).")
+        explanation_parts.append(
+            "(Includes synthetic network or temporal correlation signals)."
+        )
 
     return RiskScore(
         entity_id=signals.entity_id,
         entity_type=signals.entity_type,
         score=final_score,
         priority_tier=tier,
+        tier_description=tier_def.description,
         behavioral_signal=signals.illicit_probability,
         graph_signal=signals.graph_signal,
         anomaly_signal=signals.anomaly_score,
