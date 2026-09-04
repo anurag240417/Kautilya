@@ -11,6 +11,7 @@ from backend.api.schemas import (
     GraphNode,
     GraphPathResponse,
     GraphResponse,
+    StatisticsResponse,
     TransactionResponse,
     WalletResponse,
 )
@@ -242,6 +243,42 @@ class InvestigationService:
         updated_alert = InvestigativeAlert(**updated_dict)
         self.alerts[alert_id] = updated_alert
         return updated_alert
+
+    def get_statistics(self) -> StatisticsResponse:
+        """Return aggregate inventory, alert counts, and triage metrics."""
+        total_txs = len(self.transactions)
+        total_wallets = len(self.wallets)
+        total_alerts = len(self.alerts)
+
+        tier_counts = {"critical": 0, "high": 0, "medium": 0, "low": 0}
+        for a in self.alerts.values():
+            tier_key = a.priority_tier.value.lower()
+            if tier_key in tier_counts:
+                tier_counts[tier_key] += 1
+
+        status_counts = {"new": 0, "in_review": 0, "escalated": 0, "closed": 0}
+        for a in self.alerts.values():
+            st_key = a.status.value.lower()
+            if st_key in status_counts:
+                status_counts[st_key] += 1
+
+        synthetic_count = sum(
+            1 for a in self.alerts.values() if a.contains_synthetic_input
+        )
+        synthetic_pct = (
+            (synthetic_count / total_alerts * 100.0) if total_alerts > 0 else 0.0
+        )
+
+        return StatisticsResponse(
+            total_transactions=total_txs,
+            total_wallets=total_wallets,
+            total_alerts=total_alerts,
+            tier_counts=tier_counts,
+            status_counts=status_counts,
+            synthetic_alerts_count=synthetic_count,
+            synthetic_alerts_percentage=round(synthetic_pct, 1),
+            is_offline_mode=True,
+        )
 
     def get_subgraph(
         self,

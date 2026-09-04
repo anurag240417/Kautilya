@@ -1,0 +1,237 @@
+/* ChainTrace — Design System & Reset
+   Strictly compliant with FRONTEND_BRIEF.md
+   Sober, public-sector, high-credibility aesthetic.
+   No gradients, drop shadows, blur, glow, or neon effects.
+   No decorative motion.
+*/
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/Inter-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/Inter-Medium.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/Inter-Bold.woff2') format('woff2');
+}
+
+:root {
+  /* Base Palette */
+  --ct-bg-primary: #0F1923;
+  --ct-bg-surface: #1A2634;
+  --ct-bg-elevated: #243040;
+  --ct-border: #2E3D4F;
+  --ct-border-light: #3D4F63;
+  --ct-text-primary: #E8ECF1;
+  --ct-text-secondary: #8899A6;
+  --ct-text-muted: #5C6E7E;
+
+  /* Entity-Type System (Used exclusively for entities: nodes, entity tags, graph) */
+  --ct-entity-wallet: #4A90D9;
+  --ct-entity-transaction: #D4A843;
+  --ct-entity-network: #7B68AE;
+  --ct-entity-unknown: #5C6E7E;
+
+  /* Severity System (Used exclusively for risk severity & triage badges) */
+  --ct-severity-critical: #C9453E;
+  --ct-severity-high: #D4763A;
+  --ct-severity-medium: #C9A93E;
+  --ct-severity-low: #4A7A5C;
+
+  /* Status Colors */
+  --ct-status-new: #4A90D9;
+  --ct-status-in-review: #C9A93E;
+  --ct-status-escalated: #C9453E;
+  --ct-status-closed: #5C6E7E;
+
+  /* Typography */
+  --ct-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ct-font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+
+  /* Spacing */
+  --ct-space-xs: 4px;
+  --ct-space-sm: 8px;
+  --ct-space-md: 16px;
+  --ct-space-lg: 24px;
+  --ct-space-xl: 32px;
+
+  /* Layout */
+  --ct-sidebar-width: 240px;
+  --ct-header-height: 56px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--ct-font-family);
+  background-color: var(--ct-bg-primary);
+  color: var(--ct-text-primary);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--ct-text-primary);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+h1 { font-size: 24px; }
+h2 { font-size: 18px; }
+h3 { font-size: 15px; }
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px solid var(--ct-border);
+  background-color: var(--ct-bg-surface);
+  color: var(--ct-text-primary);
+  padding: 6px 12px;
+  border-radius: 2px;
+  transition: none;
+}
+
+button:hover {
+  background-color: var(--ct-bg-elevated);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button.primary {
+  background-color: #264366;
+  border-color: #386194;
+  color: #FFFFFF;
+}
+
+button.primary:hover {
+  background-color: #305480;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: 13px;
+  background-color: var(--ct-bg-primary);
+  color: var(--ct-text-primary);
+  border: 1px solid var(--ct-border);
+  border-radius: 2px;
+  padding: 8px 12px;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: 1px solid var(--ct-border-light);
+  border-color: var(--ct-border-light);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th {
+  text-align: left;
+  padding: 10px 12px;
+  background-color: var(--ct-bg-elevated);
+  color: var(--ct-text-secondary);
+  font-weight: 500;
+  border-bottom: 1px solid var(--ct-border);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--ct-border);
+}
+
+tr:hover td {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+code {
+  font-family: var(--ct-font-mono);
+  font-size: 12px;
+  background-color: rgba(0, 0, 0, 0.25);
+  padding: 2px 4px;
+  border-radius: 2px;
+  border: 1px solid var(--ct-border);
+}
+
+/* Common Card & Panel classes */
+.ct-card {
+  background-color: var(--ct-bg-surface);
+  border: 1px solid var(--ct-border);
+  border-radius: 2px;
+  padding: var(--ct-space-md);
+}
+
+.ct-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--ct-space-md);
+  padding-bottom: var(--ct-space-sm);
+  border-bottom: 1px solid var(--ct-border);
+}
+
+/* Badge Utilities */
+.ct-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Synthetic Data Marker Rule (per §6): dashed border + SYNTH tag */
+.ct-synthetic-marker {
+  border-style: dashed !important;
+}
+
+.ct-synthetic-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 2px;
+  background-color: transparent;
+  border: 1px dashed var(--ct-entity-network);
+  color: var(--ct-entity-network);
+  letter-spacing: 0.5px;
+}

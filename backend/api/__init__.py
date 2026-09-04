@@ -20,6 +20,7 @@ from backend.api.schemas import (
     GraphPathResponse,
     GraphResponse,
     HealthResponse,
+    StatisticsResponse,
     TransactionResponse,
     WalletResponse,
 )
@@ -40,6 +41,13 @@ def create_app() -> ChainTraceAPI:
     @app.get("/health")
     def health_check(req: Request) -> Response:
         return Response(body=HealthResponse(status="healthy", version="0.1.0"), status_code=200)
+
+    # Statistics / Dashboard summary
+    @app.get("/statistics")
+    def statistics_summary(req: Request) -> Response:
+        service = get_investigation_service()
+        stats = service.get_statistics()
+        return Response(body=stats, status_code=200)
 
     # Transactions
     app.add_route("GET", "/transactions/{txid}", handle_get_transaction)
@@ -90,4 +98,6 @@ __all__ = [
     "GraphResponse",
     "GraphPathResponse",
     "HealthResponse",
+    "StatisticsResponse",
 ]
+

@@ -7,13 +7,18 @@ library WSGI and Pydantic v2 validation.
 import io
 import json
 import logging
+import mimetypes
 import re
 from collections.abc import Callable
+from pathlib import Path
 from urllib.parse import parse_qs
 
 from pydantic import BaseModel, ValidationError
 
 from backend.api.schemas import ErrorDetail, ErrorResponse
+
+mimetypes.add_type("font/woff2", ".woff2")
+
 
 logger = logging.getLogger(__name__)
 
@@ -102,9 +107,21 @@ class Route:
 class ChainTraceAPI:
     """WSGI-compliant micro-application for ChainTrace Investigation API."""
 
-    def __init__(self, title: str = "ChainTrace API") -> None:
+    def __init__(
+        self,
+        title: str = "ChainTrace API",
+        static_dir: Path | str | None = None,
+    ) -> None:
         self.title = title
         self.routes: list[Route] = []
+        if static_dir is not None:
+            self.static_dir: Path | None = Path(static_dir).resolve()
+        else:
+            default_dist = (
+                Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+            )
+            self.static_dir = default_dist if default_dist.is_dir() else None
+
 
     def add_route(self, method: str, path: str, handler: Callable) -> None:
         """Register a route handler."""
@@ -236,6 +253,34 @@ class ChainTraceAPI:
                 status_code=405,
                 headers={"Access-Control-Allow-Origin": "*"},
             )
+
+        # Check static file serving for frontend SPA
+        if req.method in ("GET", "HEAD") and self.static_dir and self.static_dir.is_dir():
+            rel_path = req.path.lstrip("/")
+            if not rel_path or rel_path == "index.html":
+                index_file = self.static_dir / "index.html"
+                if index_file.is_file():
+                    body_data = b"" if req.method == "HEAD" else index_file.read_bytes()
+                    return Response(
+                        body=body_data,
+                        status_code=200,
+                        content_type="text/html; charset=utf-8",
+                        headers={"Access-Control-Allow-Origin": "*"},
+                    )
+            target_file = (self.static_dir / rel_path).resolve()
+            if (
+                target_file.is_file()
+                and str(target_file).startswith(str(self.static_dir))
+            ):
+                mime, _ = mimetypes.guess_type(str(target_file))
+                body_data = b"" if req.method == "HEAD" else target_file.read_bytes()
+                return Response(
+                    body=body_data,
+                    status_code=200,
+                    content_type=mime or "application/octet-stream",
+                    headers={"Access-Control-Allow-Origin": "*"},
+                )
+
 
         err = ErrorResponse(
             error=ErrorDetail(

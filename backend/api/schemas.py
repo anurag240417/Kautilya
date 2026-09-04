@@ -176,3 +176,32 @@ class HealthResponse(BaseModel):
     status: str = Field(default="healthy", description="System operational status")
     version: str = Field(default="0.1.0", description="ChainTrace version")
     dataset_loaded: bool = Field(default=False, description="True if dataset is loaded")
+
+
+class StatisticsResponse(BaseModel):
+    """Investigation and triage queue aggregate statistics."""
+
+    total_transactions: int = Field(description="Total transactions in system")
+    total_wallets: int = Field(description="Total wallets in system")
+    total_alerts: int = Field(description="Total alerts generated")
+    tier_counts: dict[str, int] = Field(
+        default_factory=dict,
+        description="Alert count by priority tier (critical, high, medium, low)",
+    )
+    status_counts: dict[str, int] = Field(
+        default_factory=dict,
+        description="Alert count by status (new, in_review, escalated, closed)",
+    )
+    synthetic_alerts_count: int = Field(
+        default=0,
+        description="Count of alerts with synthetic input",
+    )
+    synthetic_alerts_percentage: float = Field(
+        default=0.0,
+        description="Percentage of alerts with synthetic input",
+    )
+    is_offline_mode: bool = Field(
+        default=True,
+        description="True if running in offline batch mode",
+    )
+

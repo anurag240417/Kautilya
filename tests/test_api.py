@@ -538,3 +538,45 @@ class TestAPIGeneralBehavior:
         assert "code" in data["error"]
         assert "message" in data["error"]
         assert resp.headers["Access-Control-Allow-Origin"] == "*"
+
+
+class TestStatisticsEndpoint:
+    """Tests for GET /statistics dashboard aggregate counts."""
+
+    def test_get_statistics_success(self, client):
+        resp = client.get("/statistics")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "total_transactions" in data
+        assert "total_wallets" in data
+        assert "total_alerts" in data
+        assert "tier_counts" in data
+        assert "status_counts" in data
+        assert "synthetic_alerts_count" in data
+        assert "synthetic_alerts_percentage" in data
+        assert data["is_offline_mode"] is True
+        assert data["total_transactions"] >= 2
+        assert data["total_wallets"] >= 2
+        assert data["total_alerts"] >= 2
+
+
+class TestStaticFrontendServing:
+    """Tests for offline static SPA distribution serving."""
+
+    def test_serves_index_html_for_root(self, client):
+        resp = client.get("/")
+        if resp.status_code == 200:
+            assert "ChainTrace" in resp.text
+            assert "text/html" in resp.headers.get("Content-Type", "")
+
+    def test_custom_static_dir(self, tmp_path):
+        html_file = tmp_path / "index.html"
+        html_file.write_text("<!DOCTYPE html><html><body>ChainTrace Offline Test</body></html>")
+        from backend.api.app import ChainTraceAPI
+        app = ChainTraceAPI(title="Test", static_dir=tmp_path)
+        test_client = TestClient(app)
+        resp = test_client.get("/")
+        assert resp.status_code == 200
+        assert "ChainTrace Offline Test" in resp.text
+
+
