@@ -46,29 +46,36 @@ export default function SearchInput({ onSearch, initialEntity = '', initialType 
         </button>
       </form>
 
-      {/* Quick query presets for offline demo convenience */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', color: 'var(--ct-text-muted)' }}>
-        <span>Quick Samples:</span>
+      {/* Quick query presets for Operation Shadow Mixer scenario */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', color: 'var(--ct-text-muted)', flexWrap: 'wrap' }}>
+        <span style={{ fontWeight: 600 }}>Demo Scenario Samples:</span>
         <button
           type="button"
           onClick={() => handleQuickLoad('1001', 'transaction')}
-          style={{ fontSize: '11px', padding: '2px 6px', background: 'transparent' }}
+          style={{ fontSize: '11px', padding: '2px 8px', background: 'var(--ct-bg-elevated)', border: '1px solid var(--ct-border)' }}
         >
-          Tx #1001 (Illicit)
+          Tx #1001 (Critical Deposit)
         </button>
         <button
           type="button"
-          onClick={() => handleQuickLoad('1002', 'transaction')}
-          style={{ fontSize: '11px', padding: '2px 6px', background: 'transparent' }}
+          onClick={() => handleQuickLoad('1006', 'transaction')}
+          style={{ fontSize: '11px', padding: '2px 8px', background: 'var(--ct-bg-elevated)', border: '1px solid var(--ct-border)' }}
         >
-          Tx #1002 (Correlated)
+          Tx #1006 (Corroborated IP)
         </button>
         <button
           type="button"
-          onClick={() => handleQuickLoad('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa', 'wallet')}
-          style={{ fontSize: '11px', padding: '2px 6px', background: 'transparent' }}
+          onClick={() => handleQuickLoad('1MixServiceXjk8dqG2hP', 'wallet')}
+          style={{ fontSize: '11px', padding: '2px 8px', background: 'var(--ct-bg-elevated)', border: '1px solid var(--ct-border)' }}
         >
-          Genesis Wallet
+          Mixer Wallet
+        </button>
+        <button
+          type="button"
+          onClick={() => handleQuickLoad('1DrK44np3gMKuvcGeFHv', 'wallet')}
+          style={{ fontSize: '11px', padding: '2px 8px', background: 'var(--ct-bg-elevated)', border: '1px solid var(--ct-border)' }}
+        >
+          Source Wallet
         </button>
       </div>
     </div>

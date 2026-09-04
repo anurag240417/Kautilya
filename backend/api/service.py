@@ -23,6 +23,7 @@ from backend.domain.types import AlertStatus, EntityClass, PriorityTier
 from backend.domain.wallet import StatsSummary, Wallet
 from backend.graph.builder import ChainTraceGraph
 from backend.graph.paths import find_shortest_path, get_ego_graph
+from backend.api.demo_data import build_demo_dataset
 from backend.risk.aggregation import AggregationMethod, aggregate_transaction_scores
 from backend.risk.ranking import filter_and_prioritize_alerts, generate_alert
 
@@ -420,130 +421,17 @@ class InvestigationService:
 
     def seed_sample_data(self) -> None:
         """Seed representative investigation data into service memory."""
-        # 1. Transactions
-        tx1 = Transaction(
-            txid=230425980,
-            time_step=25,
-            label=EntityClass.ILLICIT,
-            total_btc=14.5,
-            fees=0.002,
-            size=350.0,
-            num_input_addresses=2.0,
-            num_output_addresses=2.0,
-            in_txs_degree=2.0,
-            out_txs_degree=1.0,
-        )
-        tx2 = Transaction(
-            txid=5530458,
-            time_step=25,
-            label=EntityClass.UNKNOWN,
-            total_btc=14.498,
-            fees=0.001,
-            size=225.0,
-            num_input_addresses=1.0,
-            num_output_addresses=2.0,
-            in_txs_degree=1.0,
-            out_txs_degree=2.0,
-        )
-        tx3 = Transaction(
-            txid=99001122,
-            time_step=26,
-            label=EntityClass.LICIT,
-            total_btc=0.5,
-            fees=0.0001,
-            size=180.0,
-            num_input_addresses=1.0,
-            num_output_addresses=1.0,
-            in_txs_degree=1.0,
-            out_txs_degree=1.0,
-        )
-        self.transactions[tx1.txid] = tx1
-        self.transactions[tx2.txid] = tx2
-        self.transactions[tx3.txid] = tx3
+        demo = build_demo_dataset()
+        self.transactions.update(demo.transactions)
+        self.wallets.update(demo.wallets)
+        self.risk_scores.update(demo.risk_scores)
+        self.correlations.update(demo.correlations)
+        self.alerts.update(demo.alerts)
 
-        # 2. Wallets
-        w1 = Wallet(
-            address="14YRXHHof4BY1TVxN5FqYPcEdpmXiYT78a",
-            time_step=25,
-            label=EntityClass.ILLICIT,
-            num_txs_as_sender=15.0,
-            num_txs_as_receiver=4.0,
-            total_txs=19.0,
-            lifetime_in_blocks=1440.0,
-            btc_transacted=StatsSummary(
-                total=45.2, min=0.1, max=14.5, mean=2.37, median=1.2
-            ),
-            btc_sent=StatsSummary(total=40.0, min=0.1, max=14.5, mean=2.6, median=1.5),
-            btc_received=StatsSummary(total=5.2, min=0.5, max=3.0, mean=1.3, median=1.0),
-        )
-        w2 = Wallet(
-            address="1GASxu5nMntiRKdVtTVRvEbP965G51bhHH",
-            time_step=25,
-            label=EntityClass.UNKNOWN,
-            num_txs_as_sender=1.0,
-            num_txs_as_receiver=5.0,
-            total_txs=6.0,
-            lifetime_in_blocks=288.0,
-            btc_transacted=StatsSummary(
-                total=15.0, min=0.5, max=14.498, mean=2.5, median=1.0
-            ),
-        )
-        self.wallets[w1.address] = w1
-        self.wallets[w2.address] = w2
-
-        # 3. Edges in graph
-        self.graph.add_addr_tx_edges([
-            AddrTxEdge(input_address=w1.address, txid=tx1.txid),
-        ])
-        self.graph.add_tx_tx_edges([
-            TxTxEdge(source_txid=tx1.txid, target_txid=tx2.txid),
-        ])
-        self.graph.add_tx_addr_edges([
-            TxAddrEdge(txid=tx2.txid, output_address=w2.address),
-        ])
-        self.graph.add_addr_addr_edges([
-            AddrAddrEdge(input_address=w1.address, output_address=w2.address),
-        ])
-
-        # 4. Risk scores & Evidence
-        rs1 = RiskScore(
-            entity_id=str(tx1.txid),
-            entity_type="transaction",
-            score=92.5,
-            priority_tier=PriorityTier.CRITICAL,
-            tier_description="Critical Priority: Multiple corroborating signals",
-            behavioral_signal=0.95,
-            graph_signal=0.85,
-            anomaly_signal=0.78,
-            correlation_signal=0.72,
-            active_signals=["behavioral", "graph", "anomaly", "correlation"],
-            explanation="Illicit classification with high volume layering and rapid fan-out.",
-            evidence_ledger=EvidenceLedger(
-                entity_id=str(tx1.txid),
-                entity_type="transaction",
-            ),
-            contains_synthetic_input=True,
-        )
-        self.risk_scores[str(tx1.txid)] = rs1
-
-        # 5. Correlations
-        self.correlations[tx1.txid] = [
-            {
-                "candidate_ip": "198.51.100.45",
-                "role": "originator",
-                "correlation_confidence": 0.82,
-                "timestamp": "2024-03-15T10:30:00Z",
-                "asn": 13335,
-                "country": "US",
-                "script_type": "P2PKH",
-                "is_synthetic": True,
-            }
-        ]
-
-        # 6. Alerts
-        alert1 = generate_alert(rs1, evidence_ledger=rs1.evidence_ledger)
-        if alert1:
-            self.alerts[alert1.alert_id] = alert1
+        self.graph.add_addr_tx_edges(demo.graph_edges["addr_tx"])
+        self.graph.add_tx_addr_edges(demo.graph_edges["tx_addr"])
+        self.graph.add_tx_tx_edges(demo.graph_edges["tx_tx"])
+        self.graph.add_addr_addr_edges(demo.graph_edges["addr_addr"])
 
 
 # Default singleton instance
