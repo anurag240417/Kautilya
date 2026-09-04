@@ -38,6 +38,7 @@ from backend.risk import (
     PriorityTierConfig,
     PriorityTierDefinition,
     SynthesisConfig,
+    SynthesisPolicy,
     aggregate_transaction_scores,
     build_evidence_ledger,
     determine_priority_tier,
@@ -661,3 +662,279 @@ class TestEntityAggregationTraceability:
                 method=AggregationMethod.VOLUME_WEIGHTED,
                 volume_weights=None,
             )
+
+
+class TestRiskScorerDeepEdgeCases:
+    """Deep edge cases and policy variations for multi-signal risk synthesis."""
+
+    def test_synthesis_policy_dynamic_normalized(self):
+        cfg = SynthesisConfig(policy=SynthesisPolicy.DYNAMIC_NORMALIZED)
+        # Even with high illicit prob (0.80) and high graph (0.70), dynamic normalized
+        # applies NO corroboration boost
+        signals = SignalInput(
+            entity_id="tx_norm",
+            entity_type="transaction",
+            illicit_probability=0.80,
+            graph_signal=0.70,
+        )
+        score = synthesize_risk_score(signals, config=cfg)
+        # Expected: (0.80 * 0.35 + 0.70 * 0.25) / (0.35 + 0.25) = (0.28 + 0.175) / 0.60 = 0.75833
+        expected = round((0.80 * 0.35 + 0.70 * 0.25) / (0.35 + 0.25) * 100.0, 2)
+        assert score.score == expected
+        assert score.priority_tier == PriorityTier.HIGH
+
+    def test_synthesis_policy_max_corroborated(self):
+        cfg = SynthesisConfig(policy=SynthesisPolicy.MAX_CORROBORATED)
+        signals = SignalInput(
+            entity_id="tx_max",
+            entity_type="transaction",
+            illicit_probability=0.70,
+            graph_signal=0.60,
+        )
+        score = synthesize_risk_score(signals, config=cfg)
+        # Max signal is 0.70 -> base = 70.0; boosted by 1.10 for 2+ signals -> 77.0
+        assert score.score == 77.0
+
+    def test_all_signals_maximum_clamped_at_100(self):
+        signals = SignalInput(
+            entity_id="tx_all_max",
+            entity_type="transaction",
+            illicit_probability=1.0,
+            anomaly_score=1.0,
+            graph_signal=1.0,
+            correlation_confidence=1.0,
+            known_indicator_signal=1.0,
+        )
+        score = synthesize_risk_score(signals)
+        assert score.score == 100.0
+        assert score.priority_tier == PriorityTier.CRITICAL
+        assert len(score.active_signals) == 5
+
+    def test_all_signals_zero(self):
+        signals = SignalInput(
+            entity_id="tx_all_zero",
+            entity_type="transaction",
+            illicit_probability=0.0,
+            anomaly_score=0.0,
+            graph_signal=0.0,
+            correlation_confidence=0.0,
+        )
+        score = synthesize_risk_score(signals)
+        assert score.score == 0.0
+        assert score.priority_tier == PriorityTier.LOW
+        assert len(score.active_signals) == 4
+
+    def test_known_indicator_signal_weighting(self):
+        # Known indicator signal carries heavy weight (0.40)
+        signals = SignalInput(
+            entity_id="tx_known",
+            entity_type="transaction",
+            known_indicator_signal=0.90,
+        )
+        score = synthesize_risk_score(signals)
+        assert score.score == 90.0
+        assert score.priority_tier == PriorityTier.CRITICAL
+        assert "known_indicator_signal" in score.active_signals
+
+    def test_custom_weights_override_in_synthesis_config(self):
+        # Override behavioral weight to 0.80 and graph to 0.20
+        custom_cfg = SynthesisConfig(
+            behavioral_weight=0.80,
+            graph_weight=0.20,
+            policy=SynthesisPolicy.DYNAMIC_NORMALIZED,
+        )
+        signals = SignalInput(
+            entity_id="tx_weighted",
+            entity_type="transaction",
+            illicit_probability=0.90,
+            graph_signal=0.10,
+        )
+        score = synthesize_risk_score(signals, config=custom_cfg)
+        # (0.90 * 0.80 + 0.10 * 0.20) / (0.80 + 0.20) = 0.72 + 0.02 = 0.74 * 100 = 74.0
+        assert score.score == 74.0
+
+    def test_custom_signal_with_custom_weight(self):
+        custom_cfg = SynthesisConfig(
+            custom_weights={"darknet_vendor_match": 0.50},
+            policy=SynthesisPolicy.DYNAMIC_NORMALIZED,
+        )
+        signals = SignalInput(
+            entity_id="tx_custom",
+            entity_type="transaction",
+            illicit_probability=0.20,
+            custom_signals={"darknet_vendor_match": 0.80},
+        )
+        score = synthesize_risk_score(signals, config=custom_cfg)
+        # behavioral (0.35 * 0.20) + darknet (0.50 * 0.80) / (0.35 + 0.50)
+        # = (0.07 + 0.40) / 0.85 = 0.47 / 0.85 = 55.29
+        expected = round((0.20 * 0.35 + 0.80 * 0.50) / (0.35 + 0.50) * 100.0, 2)
+        assert score.score == expected
+        assert "darknet_vendor_match" in score.active_signals
+
+    def test_anomaly_with_supervised_corroboration_not_capped(self):
+        # High anomaly (0.90) corroborated by high supervised prob (0.75) -> not capped at 60.0!
+        signals = SignalInput(
+            entity_id="tx_corrob",
+            entity_type="transaction",
+            illicit_probability=0.75,
+            anomaly_score=0.90,
+        )
+        score = synthesize_risk_score(signals)
+        assert score.score > 60.0
+        assert score.priority_tier in (PriorityTier.HIGH, PriorityTier.CRITICAL)
+
+
+class TestAggregationDeepEdgeCases:
+    """Deep edge cases and boundary testing for entity aggregation."""
+
+    def test_single_transaction_aggregation_consistency(self):
+        tx = RiskScore(
+            entity_id="tx_lonely",
+            entity_type="transaction",
+            score=68.5,
+            priority_tier=PriorityTier.HIGH,
+        )
+
+        for m in (AggregationMethod.MAX, AggregationMethod.MEAN):
+            agg = aggregate_transaction_scores(
+                entity_id="wallet_single",
+                transaction_scores=[tx],
+                method=m,
+            )
+            assert agg.aggregated_score == 68.5
+            assert agg.transaction_count == 1
+            assert agg.flagged_transaction_count == 1
+
+        # Single tx under volume weighted
+        agg_vol = aggregate_transaction_scores(
+            entity_id="wallet_single",
+            transaction_scores=[tx],
+            method=AggregationMethod.VOLUME_WEIGHTED,
+            volume_weights={"tx_lonely": 5.0},
+        )
+        assert agg_vol.aggregated_score == 68.5
+
+    def test_large_transaction_set_aggregation(self):
+        # 50 transactions: 40 low (10.0), 10 high (90.0)
+        tx_scores = [
+            RiskScore(
+                entity_id=f"tx_{i:03d}",
+                entity_type="transaction",
+                score=10.0,
+                priority_tier=PriorityTier.LOW,
+            )
+            for i in range(40)
+        ] + [
+            RiskScore(
+                entity_id=f"tx_{i:03d}",
+                entity_type="transaction",
+                score=90.0,
+                priority_tier=PriorityTier.CRITICAL,
+            )
+            for i in range(40, 50)
+        ]
+
+        # Under MAX: score is 90.0
+        agg_max = aggregate_transaction_scores(
+            entity_id="wallet_busy",
+            transaction_scores=tx_scores,
+            method=AggregationMethod.MAX,
+        )
+        assert agg_max.aggregated_score == 90.0
+        assert agg_max.priority_tier == PriorityTier.CRITICAL
+        assert agg_max.transaction_count == 50
+        assert agg_max.flagged_transaction_count == 10
+
+        # Under MEAN: (40 * 10 + 10 * 90) / 50 = (400 + 900) / 50 = 26.0 (LOW tier)
+        agg_mean = aggregate_transaction_scores(
+            entity_id="wallet_busy",
+            transaction_scores=tx_scores,
+            method=AggregationMethod.MEAN,
+        )
+        assert agg_mean.aggregated_score == 26.0
+        assert agg_mean.priority_tier == PriorityTier.LOW
+
+    def test_volume_weighted_partial_missing_weights_fallback(self):
+        tx1 = RiskScore(
+            entity_id="tx_known_vol",
+            entity_type="transaction",
+            score=80.0,
+            priority_tier=PriorityTier.CRITICAL,
+        )
+        tx2 = RiskScore(
+            entity_id="tx_unknown_vol",
+            entity_type="transaction",
+            score=20.0,
+            priority_tier=PriorityTier.LOW,
+        )
+
+        # tx_unknown_vol is missing from volume_weights -> should gracefully fall back to 1.0
+        agg = aggregate_transaction_scores(
+            entity_id="wallet_partial_vol",
+            transaction_scores=[tx1, tx2],
+            method=AggregationMethod.VOLUME_WEIGHTED,
+            volume_weights={"tx_known_vol": 3.0},
+        )
+        # Expected: (80.0 * 3.0 + 20.0 * 1.0) / (3.0 + 1.0) = (240 + 20) / 4 = 65.0
+        assert agg.aggregated_score == 65.0
+        assert agg.priority_tier == PriorityTier.HIGH
+
+    def test_frequency_threshold_variations(self):
+        tx_scores = [
+            RiskScore(
+                entity_id=f"tx_{i}",
+                entity_type="transaction",
+                score=float(i * 10),
+                priority_tier=PriorityTier.LOW,
+            )
+            for i in range(1, 11)  # 10.0, 20.0, ..., 100.0
+        ]
+        # Threshold 50.0: scores >= 50.0 are 50, 60, 70, 80, 90, 100 -> 6 / 10 = 60.0%
+        agg_50 = aggregate_transaction_scores(
+            entity_id="w_freq",
+            transaction_scores=tx_scores,
+            method=AggregationMethod.FREQUENCY,
+            frequency_threshold=50.0,
+        )
+        assert agg_50.aggregated_score == 60.0
+        assert agg_50.aggregation_metadata["flagged_count"] == 6
+
+        # Threshold 80.0: scores >= 80.0 are 80, 90, 100 -> 3 / 10 = 30.0%
+        agg_80 = aggregate_transaction_scores(
+            entity_id="w_freq",
+            transaction_scores=tx_scores,
+            method=AggregationMethod.FREQUENCY,
+            frequency_threshold=80.0,
+        )
+        assert agg_80.aggregated_score == 30.0
+        assert agg_80.aggregation_metadata["flagged_count"] == 3
+
+    def test_aggregation_with_custom_tier_config(self):
+        strict_tiers = PriorityTierConfig(
+            tiers=(
+                PriorityTierDefinition(
+                    tier=PriorityTier.CRITICAL,
+                    min_score=95.0,
+                    description="Strict Critical",
+                ),
+                PriorityTierDefinition(
+                    tier=PriorityTier.LOW,
+                    min_score=0.0,
+                    description="Strict Low",
+                ),
+            )
+        )
+        tx = RiskScore(
+            entity_id="tx_strict",
+            entity_type="transaction",
+            score=88.0,
+            priority_tier=PriorityTier.CRITICAL,
+        )
+        agg = aggregate_transaction_scores(
+            entity_id="w_strict",
+            transaction_scores=[tx],
+            tier_config=strict_tiers,
+        )
+        # Score is 88.0 -> Under default this is CRITICAL, but under strict_tiers (<95) maps to LOW
+        assert agg.priority_tier == PriorityTier.LOW
+        assert agg.tier_description == "Strict Low"
