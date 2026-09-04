@@ -99,3 +99,19 @@ export async function getGraphPath(source, target) {
   const query = new URLSearchParams({ source, target });
   return request(`/graph/path?${query.toString()}`);
 }
+
+export async function getSimulationStatus() {
+  return request('/simulation/status');
+}
+
+export async function injectSimulationStep(batchSize = 1) {
+  const url = batchSize > 1 ? `/simulation/inject?batch=${batchSize}` : '/simulation/inject';
+  return request(url, { method: 'POST' });
+}
+
+export async function resetSimulation(mode = 'baseline') {
+  return request('/simulation/reset', {
+    method: 'POST',
+    body: { mode },
+  });
+}

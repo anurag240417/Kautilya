@@ -46,6 +46,7 @@ class InvestigationService:
         self.risk_scores: dict[str, RiskScore] = risk_scores or {}
         self.alerts: dict[str, InvestigativeAlert] = alerts or {}
         self.correlations: dict[int, list[dict[str, Any]]] = correlations or {}
+        self.simulation_step: int = 6
 
     def get_transaction(self, txid: int) -> TransactionResponse | None:
         """Fetch transaction details, interpretable features, and forensic risk signals."""
@@ -420,8 +421,15 @@ class InvestigationService:
         )
 
     def seed_sample_data(self) -> None:
-        """Seed representative investigation data into service memory."""
+        """Seed representative base investigation scenario (Operation Shadow Mixer)."""
         demo = build_demo_dataset()
+        self.transactions.clear()
+        self.wallets.clear()
+        self.risk_scores.clear()
+        self.correlations.clear()
+        self.alerts.clear()
+        self.graph = ChainTraceGraph()
+
         self.transactions.update(demo.transactions)
         self.wallets.update(demo.wallets)
         self.risk_scores.update(demo.risk_scores)
@@ -432,6 +440,54 @@ class InvestigationService:
         self.graph.add_tx_addr_edges(demo.graph_edges["tx_addr"])
         self.graph.add_tx_tx_edges(demo.graph_edges["tx_tx"])
         self.graph.add_addr_addr_edges(demo.graph_edges["addr_addr"])
+        self.simulation_step = 7
+
+    def seed_expanded_data(self) -> None:
+        """Seed 110 transactions across 5 forensic clusters for rich live demonstration."""
+        from backend.api.expanded_data import build_expanded_dataset
+        exp = build_expanded_dataset()
+        self.transactions.clear()
+        self.wallets.clear()
+        self.risk_scores.clear()
+        self.correlations.clear()
+        self.alerts.clear()
+        self.graph = ChainTraceGraph()
+
+        self.transactions.update(exp.transactions)
+        self.wallets.update(exp.wallets)
+        self.risk_scores.update(exp.risk_scores)
+        self.correlations.update(exp.correlations)
+        self.alerts.update(exp.alerts)
+
+        self.graph.add_addr_tx_edges(exp.graph_edges["addr_tx"])
+        self.graph.add_tx_addr_edges(exp.graph_edges["tx_addr"])
+        self.graph.add_tx_tx_edges(exp.graph_edges["tx_tx"])
+        self.graph.add_addr_addr_edges(exp.graph_edges["addr_addr"])
+        self.simulation_step = len(exp.transactions)
+
+    def reset_simulation(self, mode: str = "baseline") -> dict[str, Any]:
+        """Reset the service state to baseline or full scenario."""
+        from backend.api.simulation import get_simulation_engine
+        engine = get_simulation_engine()
+        return engine.reset(self, mode=mode)
+
+    def inject_simulation_step(self) -> dict[str, Any]:
+        """Inject the next step in the investigation scenario."""
+        from backend.api.simulation import get_simulation_engine
+        engine = get_simulation_engine()
+        return engine.inject_next(self)
+
+    def inject_simulation_batch(self, batch_size: int = 10) -> dict[str, Any]:
+        """Inject a batch of transactions into the simulation."""
+        from backend.api.simulation import get_simulation_engine
+        engine = get_simulation_engine()
+        return engine.inject_batch(self, batch_size=batch_size)
+
+    def get_simulation_status(self) -> dict[str, Any]:
+        """Return the current simulation progress and next step."""
+        from backend.api.simulation import get_simulation_engine
+        engine = get_simulation_engine()
+        return engine.get_status(self)
 
 
 # Default singleton instance

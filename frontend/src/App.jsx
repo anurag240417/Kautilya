@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
+import NetworkTelemetryBar from './components/NetworkTelemetryBar';
 import Overview from './pages/Overview';
 import Investigation from './pages/Investigation';
 import Alerts from './pages/Alerts';
@@ -39,9 +40,15 @@ export default function App() {
             backgroundColor: 'var(--ct-bg-primary)',
             minHeight: '100vh',
             overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
           }}
         >
-          <Routes>
+          {/* Institutional Bitcoin Network & Forensic Telemetry Header */}
+          <NetworkTelemetryBar />
+
+          <div style={{ flex: 1 }}>
+            <Routes>
             <Route path="/" element={<Overview />} />
             <Route path="/investigation" element={<Investigation />} />
             <Route path="/alerts" element={<Alerts />} />
@@ -49,8 +56,9 @@ export default function App() {
             <Route path="/data-sources" element={<DataSources />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </main>
-      </div>
+        </div>
+      </main>
+    </div>
     </HashRouter>
   );
 }

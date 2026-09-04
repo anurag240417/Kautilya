@@ -412,6 +412,15 @@ class TestClient:
                     query_parts.append(f"{k}={v}")
         query_string = "&".join(query_parts)
 
+        # Separate query string if present in path
+        if "?" in path:
+            path_part, qs_part = path.split("?", 1)
+            path = path_part
+            if query_string:
+                query_string = f"{qs_part}&{query_string}"
+            else:
+                query_string = qs_part
+
         # Build WSGI environ
         environ: dict[str, object] = {
             "REQUEST_METHOD": method.upper(),

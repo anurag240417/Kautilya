@@ -53,6 +53,12 @@ export default function Overview() {
     }
 
     loadOverviewData();
+
+    const handleSimUpdate = () => {
+      loadOverviewData();
+    };
+    window.addEventListener('chaintrace-simulation-update', handleSimUpdate);
+    return () => window.removeEventListener('chaintrace-simulation-update', handleSimUpdate);
   }, []);
 
   const handleSearch = (entityId, entityType) => {

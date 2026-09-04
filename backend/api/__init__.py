@@ -29,6 +29,11 @@ from backend.api.service import (
     get_investigation_service,
     set_investigation_service,
 )
+from backend.api.simulation_routes import (
+    handle_get_simulation_status,
+    handle_post_simulation_inject,
+    handle_post_simulation_reset,
+)
 from backend.api.transactions import handle_get_transaction
 from backend.api.wallets import handle_get_wallet
 
@@ -63,6 +68,11 @@ def create_app() -> ChainTraceAPI:
     # Graph (specific paths before parameterized paths)
     app.add_route("GET", "/graph/path", handle_get_graph_path)
     app.add_route("GET", "/graph/{entity_id}", handle_get_graph)
+
+    # Simulation / Live Stream Ingestion
+    app.add_route("GET", "/simulation/status", handle_get_simulation_status)
+    app.add_route("POST", "/simulation/inject", handle_post_simulation_inject)
+    app.add_route("POST", "/simulation/reset", handle_post_simulation_reset)
 
     return app
 

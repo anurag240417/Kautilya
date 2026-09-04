@@ -79,6 +79,14 @@ export default function Investigation() {
 
   useEffect(() => {
     fetchEntityInvestigation(activeEntityId, activeEntityType);
+
+    const handleSimUpdate = () => {
+      if (activeEntityId) {
+        fetchEntityInvestigation(activeEntityId, activeEntityType);
+      }
+    };
+    window.addEventListener('chaintrace-simulation-update', handleSimUpdate);
+    return () => window.removeEventListener('chaintrace-simulation-update', handleSimUpdate);
   }, [activeEntityId, activeEntityType, fetchEntityInvestigation]);
 
   const handleSearch = (id, type) => {

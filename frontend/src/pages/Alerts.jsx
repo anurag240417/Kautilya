@@ -52,6 +52,12 @@ export default function Alerts() {
 
   useEffect(() => {
     loadAlerts();
+
+    const handleSimUpdate = () => {
+      loadAlerts();
+    };
+    window.addEventListener('chaintrace-simulation-update', handleSimUpdate);
+    return () => window.removeEventListener('chaintrace-simulation-update', handleSimUpdate);
   }, [minTier, entityType, status, includeSynthetic, minScore]);
 
   const handleStatusChange = async (alertId, newStatus) => {
