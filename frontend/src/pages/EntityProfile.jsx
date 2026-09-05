@@ -47,9 +47,41 @@ export default function EntityProfile() {
         // Fetch mini ego-graph
         try {
           const g = await getGraph(activeId, { depth: 1, maxNodes: 30 });
-          if (g && g.nodes) {
-            setGraphData({ nodes: g.nodes, edges: g.edges });
+          let currentNodes = g?.nodes ? [...g.nodes] : [];
+          let currentEdges = g?.edges ? [...g.edges] : [];
+
+          if (result?.correlations && result.correlations.length > 0) {
+            result.correlations.forEach((c) => {
+              const ipId = String(c.candidate_ip);
+              if (!currentNodes.some((n) => String(n.id) === ipId)) {
+                currentNodes.push({
+                  id: ipId,
+                  type: 'network',
+                  label: ipId,
+                  is_synthetic: Boolean(c.is_synthetic),
+                  asn: c.asn,
+                  country: c.country,
+                  role: c.role || 'network_observation',
+                  confidence: c.correlation_confidence,
+                });
+              }
+              const edgeExists = currentEdges.some(
+                (e) => String(e.source) === String(activeId) && String(e.target) === ipId
+              );
+              if (!edgeExists) {
+                currentEdges.push({
+                  source: String(activeId),
+                  target: ipId,
+                  relationship: c.role ? `${c.role}_ip` : 'network_ip',
+                  is_synthetic: Boolean(c.is_synthetic),
+                  confidence: c.correlation_confidence,
+                  provenance: 'synthetic_simulation',
+                });
+              }
+            });
           }
+
+          setGraphData({ nodes: currentNodes, edges: currentEdges });
         } catch {
           setGraphData({
             nodes: [{ id: activeId, type: activeType, is_synthetic: result?.is_synthetic }],

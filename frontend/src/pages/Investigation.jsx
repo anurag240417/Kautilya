@@ -50,22 +50,80 @@ export default function Investigation() {
       // Fetch subgraph for visual link analysis
       try {
         const g = await getGraph(id, { depth: 1, maxNodes: 50 });
-        if (g && g.nodes) {
-          setGraphData({ nodes: g.nodes, edges: g.edges });
+        let currentNodes = g?.nodes ? [...g.nodes] : [];
+        let currentEdges = g?.edges ? [...g.edges] : [];
+
+        // Enrich with correlated network IP observations if present
+        if (details?.correlations && details.correlations.length > 0) {
+          details.correlations.forEach((c) => {
+            const ipId = String(c.candidate_ip);
+            if (!currentNodes.some((n) => String(n.id) === ipId)) {
+              currentNodes.push({
+                id: ipId,
+                type: 'network',
+                label: ipId,
+                is_synthetic: Boolean(c.is_synthetic),
+                asn: c.asn,
+                country: c.country,
+                role: c.role || 'network_observation',
+                confidence: c.correlation_confidence,
+              });
+            }
+            const edgeExists = currentEdges.some(
+              (e) => String(e.source) === String(id) && String(e.target) === ipId
+            );
+            if (!edgeExists) {
+              currentEdges.push({
+                source: String(id),
+                target: ipId,
+                relationship: c.role ? `${c.role}_ip` : 'network_ip',
+                is_synthetic: Boolean(c.is_synthetic),
+                confidence: c.correlation_confidence,
+                provenance: 'synthetic_simulation',
+              });
+            }
+          });
         }
+
+        setGraphData({ nodes: currentNodes, edges: currentEdges });
       } catch (gErr) {
         console.warn('Subgraph fetch failed, fallback to direct node:', gErr);
+        const fallbackNodes = [
+          {
+            id: String(id),
+            type: type,
+            priority_tier: details?.risk_score?.priority_tier || details?.aggregation?.priority_tier,
+            risk_score: details?.risk_score?.score || details?.aggregation?.score,
+            is_synthetic: details?.is_synthetic,
+          },
+        ];
+        const fallbackEdges = [];
+        if (details?.correlations && details.correlations.length > 0) {
+          details.correlations.forEach((c) => {
+            const ipId = String(c.candidate_ip);
+            fallbackNodes.push({
+              id: ipId,
+              type: 'network',
+              label: ipId,
+              is_synthetic: Boolean(c.is_synthetic),
+              asn: c.asn,
+              country: c.country,
+              role: c.role || 'network_observation',
+              confidence: c.correlation_confidence,
+            });
+            fallbackEdges.push({
+              source: String(id),
+              target: ipId,
+              relationship: c.role ? `${c.role}_ip` : 'network_ip',
+              is_synthetic: Boolean(c.is_synthetic),
+              confidence: c.correlation_confidence,
+              provenance: 'synthetic_simulation',
+            });
+          });
+        }
         setGraphData({
-          nodes: [
-            {
-              id: String(id),
-              type: type,
-              priority_tier: details?.risk_score?.priority_tier || details?.aggregation?.priority_tier,
-              risk_score: details?.risk_score?.score || details?.aggregation?.score,
-              is_synthetic: details?.is_synthetic,
-            },
-          ],
-          edges: [],
+          nodes: fallbackNodes,
+          edges: fallbackEdges,
         });
       }
     } catch (err) {
@@ -96,6 +154,10 @@ export default function Investigation() {
   };
 
   const handleSelectGraphNode = (nodeId, nodeType) => {
+    if (nodeType === 'network' || nodeType === 'ip') {
+      // IP nodes are network telemetry observations, not queryable transactions/wallets
+      return;
+    }
     if (String(nodeId) !== String(activeEntityId)) {
       handleSearch(nodeId, nodeType || 'transaction');
     }
