@@ -23,8 +23,10 @@ export const SEVERITY_COLORS = {
 
 export const STATUS_COLORS = {
   new: '#4A90D9',
+  triaged: '#20B2AA',
   in_review: '#C9A93E',
   escalated: '#C9453E',
+  dismissed: '#5C6E7E',
   closed: '#5C6E7E',
 };
 
@@ -42,6 +44,6 @@ export function getSeverityColor(tier) {
 
 export function getStatusColor(status) {
   if (!status) return STATUS_COLORS.new;
-  const key = String(status).toLowerCase();
+  const key = String(status).toLowerCase().replace(/[\s-]/g, '_');
   return STATUS_COLORS[key] || STATUS_COLORS.new;
 }

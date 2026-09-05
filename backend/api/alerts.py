@@ -46,7 +46,10 @@ def handle_get_alerts(req: Request) -> Response:
     status = None
     if raw_status:
         try:
-            status = AlertStatus(raw_status.lower())
+            status_val = raw_status.strip().lower()
+            if status_val == "closed":
+                status_val = "dismissed"
+            status = AlertStatus(status_val)
         except ValueError:
             return Response(
                 body=ErrorResponse(

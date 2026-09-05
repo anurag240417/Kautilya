@@ -258,11 +258,20 @@ class InvestigationService:
             if tier_key in tier_counts:
                 tier_counts[tier_key] += 1
 
-        status_counts = {"new": 0, "in_review": 0, "escalated": 0, "closed": 0}
+        status_counts = {
+            "new": 0,
+            "triaged": 0,
+            "in_review": 0,
+            "escalated": 0,
+            "dismissed": 0,
+            "closed": 0,
+        }
         for a in self.alerts.values():
             st_key = a.status.value.lower()
             if st_key in status_counts:
                 status_counts[st_key] += 1
+                if st_key == "dismissed":
+                    status_counts["closed"] += 1
 
         synthetic_count = sum(
             1 for a in self.alerts.values() if a.contains_synthetic_input

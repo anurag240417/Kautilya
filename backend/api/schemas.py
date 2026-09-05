@@ -6,7 +6,7 @@ API consumers (frontend or automated clients).
 
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from backend.domain.alert import InvestigativeAlert
 from backend.domain.risk import RiskScore
@@ -123,6 +123,19 @@ class AlertUpdatePayload(BaseModel):
         default=None,
         description="Optional investigator notes or triage rationale",
     )
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def normalize_status(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            v_norm = v.strip().lower()
+            if v_norm == "closed":
+                return AlertStatus.DISMISSED
+            try:
+                return AlertStatus(v_norm)
+            except ValueError:
+                return v
+        return v
 
 
 class GraphNode(BaseModel):

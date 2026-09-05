@@ -408,6 +408,22 @@ class TestAlertsEndpoint:
         get_resp = client.get(f"/alerts/{alert_id}")
         assert get_resp.json()["status"] == "in_review"
 
+        # Update with uppercase status (e.g. IN_REVIEW, ESCALATED)
+        patch_upper = client.patch(
+            f"/alerts/{alert_id}",
+            json={"status": "ESCALATED"},
+        )
+        assert patch_upper.status_code == 200
+        assert patch_upper.json()["status"] == "escalated"
+
+        # Update with CLOSED alias (maps to dismissed)
+        patch_closed = client.patch(
+            f"/alerts/{alert_id}",
+            json={"status": "CLOSED"},
+        )
+        assert patch_closed.status_code == 200
+        assert patch_closed.json()["status"] == "dismissed"
+
     def test_patch_alert_invalid_status(self, client):
         list_resp = client.get("/alerts")
         alert_id = list_resp.json()["alerts"][0]["alert_id"]

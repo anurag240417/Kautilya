@@ -61,15 +61,16 @@ export default function Alerts() {
   }, [minTier, entityType, status, includeSynthetic, minScore]);
 
   const handleStatusChange = async (alertId, newStatus) => {
+    const normalizedStatus = String(newStatus).toLowerCase();
     try {
       setUpdatingAlertId(alertId);
       await patchAlert(alertId, {
-        status: newStatus,
-        reviewer_notes: `Status updated to ${newStatus} via triage dashboard.`,
+        status: normalizedStatus,
+        reviewer_notes: `Status updated to ${normalizedStatus} via triage dashboard.`,
       });
       // Refresh alert in list
       setAlerts((prev) =>
-        prev.map((a) => (a.alert_id === alertId ? { ...a, status: newStatus } : a))
+        prev.map((a) => (a.alert_id === alertId ? { ...a, status: normalizedStatus } : a))
       );
     } catch (err) {
       alert(`Failed to update alert: ${err.message}`);
@@ -129,10 +130,11 @@ export default function Alerts() {
           <label style={{ fontSize: '12px', color: 'var(--ct-text-secondary)' }}>Status:</label>
           <select value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="">All Statuses</option>
-            <option value="NEW">New</option>
-            <option value="IN_REVIEW">In Review</option>
-            <option value="ESCALATED">Escalated</option>
-            <option value="CLOSED">Closed</option>
+            <option value="new">New</option>
+            <option value="triaged">Triaged</option>
+            <option value="in_review">In Review</option>
+            <option value="escalated">Escalated</option>
+            <option value="dismissed">Dismissed</option>
           </select>
         </div>
 
@@ -303,7 +305,7 @@ export default function Alerts() {
                     {/* Lifecycle Status dropdown */}
                     <td>
                       <select
-                        value={alert.status}
+                        value={alert.status?.toLowerCase() || 'new'}
                         disabled={updatingAlertId === alert.alert_id}
                         onChange={(e) => handleStatusChange(alert.alert_id, e.target.value)}
                         style={{
@@ -311,12 +313,15 @@ export default function Alerts() {
                           padding: '3px 6px',
                           color: getStatusColor(alert.status),
                           borderColor: `${getStatusColor(alert.status)}44`,
+                          backgroundColor: 'var(--ct-bg-surface)',
+                          cursor: updatingAlertId === alert.alert_id ? 'wait' : 'pointer',
                         }}
                       >
-                        <option value="NEW">NEW</option>
-                        <option value="IN_REVIEW">IN REVIEW</option>
-                        <option value="ESCALATED">ESCALATED</option>
-                        <option value="CLOSED">CLOSED</option>
+                        <option value="new">NEW</option>
+                        <option value="triaged">TRIAGED</option>
+                        <option value="in_review">IN REVIEW</option>
+                        <option value="escalated">ESCALATED</option>
+                        <option value="dismissed">DISMISSED</option>
                       </select>
                     </td>
 
