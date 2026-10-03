@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import SearchInput from '../components/SearchInput';
 import InvestigationGraph from '../components/InvestigationGraph';
 import EvidenceTrail from '../components/EvidenceTrail';
@@ -19,6 +19,7 @@ import { getEntityColor } from '../utils/colors';
  */
 export default function Investigation() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const initialEntity = searchParams.get('entity') || '1001';
   const initialType = searchParams.get('type') || 'transaction';
 
@@ -148,6 +149,12 @@ export default function Investigation() {
   }, [activeEntityId, activeEntityType, fetchEntityInvestigation]);
 
   const handleSearch = (id, type) => {
+    // Long hex transaction ids belong to the Forensics Lab (raw-transaction analysis);
+    // this page only knows the numeric Elliptic++ ids.
+    if (type === 'transaction' && /^[0-9a-f]{8,64}$/i.test(id) && /[a-f]/i.test(id)) {
+      navigate(`/forensics?search=${encodeURIComponent(id)}`);
+      return;
+    }
     setActiveEntityId(id);
     setActiveEntityType(type);
     setSearchParams({ entity: id, type });

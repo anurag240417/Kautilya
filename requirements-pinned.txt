@@ -1,0 +1,11 @@
+# Exact versions the Forensics Lab was developed and tested with (Python 3.14 on
+# Windows). Used by the Dockerfile for reproducible Linux builds. If a wheel is
+# unavailable for your Python, loosen to the ranges in requirements.txt.
+lxml==6.1.3
+networkx==3.7
+numpy==2.5.3
+pandas==3.0.6
+pydantic==2.13.5
+scikit-learn==1.9.1
+scipy==1.18.1
+joblib==1.6.0

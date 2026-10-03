@@ -33,7 +33,7 @@ export default function SearchInput({ onSearch, initialEntity = '', initialType 
           type="text"
           placeholder={
             entityType === 'transaction'
-              ? 'Enter Elliptic++ Transaction ID (e.g. 1001, 230425446)'
+              ? 'Enter Elliptic++ Transaction ID (e.g. 1001, 1006, 2001)'
               : 'Enter Wallet Address (e.g. 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa, 1dice8EM2Ws...)'
           }
           value={entityId}

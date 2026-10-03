@@ -13,3 +13,8 @@ dataset/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Forensics Lab runtime state and generated data
+.chaintrace/
+data/
+*.db

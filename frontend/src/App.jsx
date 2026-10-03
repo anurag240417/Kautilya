@@ -7,6 +7,7 @@ import Investigation from './pages/Investigation';
 import Alerts from './pages/Alerts';
 import EntityProfile from './pages/EntityProfile';
 import DataSources from './pages/DataSources';
+import ForensicsLab from './pages/ForensicsLab';
 import { getHealth } from './api/client';
 
 export default function App() {
@@ -52,6 +53,7 @@ export default function App() {
             <Route path="/" element={<Overview />} />
             <Route path="/investigation" element={<Investigation />} />
             <Route path="/alerts" element={<Alerts />} />
+            <Route path="/forensics" element={<ForensicsLab />} />
             <Route path="/entity-profile" element={<EntityProfile />} />
             <Route path="/data-sources" element={<DataSources />} />
             <Route path="*" element={<Navigate to="/" replace />} />

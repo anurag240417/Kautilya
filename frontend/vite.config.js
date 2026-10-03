@@ -12,6 +12,8 @@ export default defineConfig({
       '/graph': 'http://127.0.0.1:8000',
       '/statistics': 'http://127.0.0.1:8000',
       '/health': 'http://127.0.0.1:8000',
+      '/forensics': 'http://127.0.0.1:8000',
+      '/simulation': 'http://127.0.0.1:8000',
     },
   },
   build: {

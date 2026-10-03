@@ -134,6 +134,32 @@ Run the benchmark suite to evaluate latency across ingestion, query resolution, 
 python benchmarks/bench_core.py
 ```
 
+### Model Benchmark (ML vs rules vs baselines)
+
+Compares rules-only, logistic regression, Isolation Forest, Random Forest, and the fused risk score on the same out-of-time test rows. Reports PR-AUC, precision@k, recall@k, lift, false-positive rate, bootstrap 95% CIs, rolling-origin stability, and robustness to noisy or missing features.
+
+```bash
+python -m scripts.run_benchmark              # needs Elliptic++ under CHAINTRACE_DATASET_DIR
+python -m scripts.run_benchmark --smoke-test # pipeline check on random data, numbers meaningless
+```
+
+Output goes to `reports/BENCHMARK.md` and `reports/benchmark_results.json`.
+
+### Forensics Lab (raw transaction + network metadata)
+
+Ingests the problem-statement schema (CSV/JSON/XML: timestamps, IPs/ports, TXIDs, input/output addresses and amounts, fee, script type, geo/ASN), resolves entities, runs laundering heuristics (CoinJoin, dust, change address, peel chains, rapid-hop layering), scores with graph ML + anomaly detection, and produces ranked, explainable leads with analyst feedback and tamper-evident reports. Open **Forensics Lab** in the UI after `./run_demo.sh`.
+
+```bash
+python -m scripts.generate_dataset --n-tx 20000 --out data/synthetic   # CSV + JSON + XML + ground truth
+python -m scripts.analyze_dataset data/synthetic.csv                    # ingestion audit + top leads
+python -m scripts.run_forensic_benchmark                                # ablation, baselines, unseen scenarios
+python -m scripts.scale_test --n-tx 500000                              # throughput and memory
+python -m backend.forensics.report verify report.html                   # verify a downloaded report offline
+docker compose up --build                                               # Linux container, offline at runtime
+```
+
+Docs: [technical write-up](docs/FORENSICS_LAB.md), [ethics and limits](docs/ETHICS_AND_LIMITS.md), [submission pitch and Q&A](docs/SUBMISSION_IDEA2.md), [GeoIP/Tor setup](docs/GEOIP_SETUP.md), [official dataset guide](docs/OFFICIAL_DATASET.md). Results: `reports/BENCHMARK.md` (real Elliptic++), `reports/FORENSICS_BENCHMARK.md` (synthetic), `reports/SCALE_TEST.md`.
+
 ### Zero Runtime Network Dependency Audit
 
 Verify that the system executes completely air-gapped without external requests or unbundled lookups:
@@ -168,3 +194,5 @@ python scripts/verify_offline.py
 ## License & Forensic Ethics
 
 ChainTrace is developed strictly as an investigative decision-support tool. It presents probabilistic rankings, anomalies, and structural indicators with explicit uncertainty metrics. It does not replace judicial oversight or legal due process.
+#   C h a i n - T r a c e  
+ 

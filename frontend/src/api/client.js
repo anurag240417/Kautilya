@@ -115,3 +115,38 @@ export async function resetSimulation(mode = 'baseline') {
     body: { mode },
   });
 }
+
+// ---------------------------------------------------------------------------
+// Forensics Lab (raw-transaction analysis)
+// ---------------------------------------------------------------------------
+
+export const forensics = {
+  status: () => request('/forensics/status'),
+  load: (body) => request('/forensics/load', { method: 'POST', body }),
+  files: () => request('/forensics/files'),
+  alerts: (params = {}) => {
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') q.append(k, String(v));
+    });
+    return request(`/forensics/alerts?${q.toString()}`);
+  },
+  entity: (id) => request(`/forensics/entities/${encodeURIComponent(id)}`),
+  graph: (id, radius = 2, maxNodes = 60) =>
+    request(`/forensics/graph/${encodeURIComponent(id)}?radius=${radius}&max_nodes=${maxNodes}`),
+  feedback: (body) => request('/forensics/feedback', { method: 'POST', body }),
+  uncertain: (k = 8) => request(`/forensics/uncertain?k=${k}`),
+  retrain: (seedFraction = 0.1) =>
+    request('/forensics/retrain', { method: 'POST', body: { seed_fraction: seedFraction } }),
+  resetModel: () => request('/forensics/reset-model', { method: 'POST', body: {} }),
+  createCase: (body) => request('/forensics/cases', { method: 'POST', body }),
+  cases: () => request('/forensics/cases'),
+  benchmark: () => request('/forensics/benchmark'),
+  reportUrl: (ids, title = '', analyst = '', download = true) => {
+    const q = new URLSearchParams({ entities: ids.join(',') });
+    if (title) q.append('title', title);
+    if (analyst) q.append('analyst', analyst);
+    if (download) q.append('download', '1');
+    return `/forensics/report?${q.toString()}`;
+  },
+};

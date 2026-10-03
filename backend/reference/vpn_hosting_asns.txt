@@ -1,0 +1,13 @@
+# Well-known hosting / VPN / proxy-friendly ASNs (public registry facts).
+9009 M247
+20473 Vultr/Choopa
+16276 OVH
+14061 DigitalOcean
+24940 Hetzner
+63949 Linode
+60068 CDN77/Datacamp
+212238 Datacamp
+396356 Maxihost
+51167 Contabo
+197540 netcup
+34224 Neterra

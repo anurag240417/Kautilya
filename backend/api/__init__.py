@@ -74,6 +74,11 @@ def create_app() -> ChainTraceAPI:
     app.add_route("POST", "/simulation/inject", handle_post_simulation_inject)
     app.add_route("POST", "/simulation/reset", handle_post_simulation_reset)
 
+    # Raw-transaction forensics (graph ML, heuristics, network correlation, cases)
+    from backend.api import forensics_routes
+
+    forensics_routes.register(app)
+
     return app
 
 

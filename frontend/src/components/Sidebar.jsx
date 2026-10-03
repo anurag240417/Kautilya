@@ -6,6 +6,7 @@ export default function Sidebar({ systemStatus = { offline: true, operational: t
     { to: '/', label: 'Overview', desc: 'Triage & KPIs' },
     { to: '/investigation', label: 'Investigation', desc: 'Trace & Link Graph' },
     { to: '/alerts', label: 'Alert Queue', desc: 'Ranked Triage List' },
+    { to: '/forensics', label: 'Forensics Lab', desc: 'Raw Tx Analysis & Cases' },
     { to: '/entity-profile', label: 'Entity Profile', desc: 'Deep-Dive Forensic' },
     { to: '/data-sources', label: 'Data Sources', desc: 'Provenance Transparency' },
   ];

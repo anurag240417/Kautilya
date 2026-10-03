@@ -1,0 +1,51 @@
+# syntax=docker/dockerfile:1
+#
+# ChainTrace - offline forensic analysis platform (Linux).
+#
+# Build needs network access once (pip + npm). The running container makes NO
+# outbound connections: all models, reference lists and the UI are baked in or
+# mounted. Verify with:  docker run --rm --network none chaintrace python scripts/verify_offline.py
+#
+#   docker build -t chaintrace .
+#   docker run --rm -p 8000:8000 -v "$PWD/data:/app/data:ro" -v chaintrace-state:/app/state chaintrace
+
+# ---- 1. Build the React UI ------------------------------------------------
+FROM node:20-slim AS frontend
+WORKDIR /build
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY frontend/ ./
+RUN npm run build
+
+# ---- 2. Runtime -----------------------------------------------------------
+FROM python:3.12-slim AS runtime
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    CHAINTRACE_HOST=0.0.0.0 \
+    CHAINTRACE_PORT=8000 \
+    CHAINTRACE_DATA_DIR=/app/data \
+    CHAINTRACE_GEOIP_DIR=/app/geoip \
+    CHAINTRACE_CASE_DB=/app/state/cases.db
+
+WORKDIR /app
+COPY requirements-pinned.txt ./
+RUN pip install --no-cache-dir -r requirements-pinned.txt
+
+COPY pyproject.toml README.md ./
+COPY backend ./backend
+COPY scripts ./scripts
+COPY reports ./reports
+COPY --from=frontend /build/dist ./frontend/dist
+
+# Non-root user; data is mounted read-only, state (case DB) is a writable volume.
+RUN useradd --create-home --uid 1000 app \
+    && mkdir -p /app/data /app/state /app/geoip \
+    && chown -R app:app /app/state
+USER app
+
+VOLUME ["/app/state"]
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s \
+    CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).status == 200 else 1)"
+
+CMD ["python", "-m", "backend.main"]
