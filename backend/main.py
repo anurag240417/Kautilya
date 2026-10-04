@@ -55,5 +55,6 @@ def main(host: str = "127.0.0.1", port: int = 8000) -> None:
 if __name__ == "__main__":
     main(
         host=os.environ.get("CHAINTRACE_HOST", "127.0.0.1"),
-        port=int(os.environ.get("CHAINTRACE_PORT", "8000")),
+        # Render, Heroku and similar platforms assign the port through PORT.
+        port=int(os.environ.get("PORT") or os.environ.get("CHAINTRACE_PORT") or "8000"),
     )

@@ -46,6 +46,6 @@ USER app
 VOLUME ["/app/state"]
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s \
-    CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).status == 200 else 1)"
+    CMD python -c "import os,sys,urllib.request as u; p=os.environ.get('PORT') or os.environ.get('CHAINTRACE_PORT') or '8000'; sys.exit(0 if u.urlopen(f'http://127.0.0.1:{p}/health', timeout=3).status == 200 else 1)"
 
 CMD ["python", "-m", "backend.main"]

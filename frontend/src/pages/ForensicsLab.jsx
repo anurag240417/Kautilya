@@ -380,7 +380,7 @@ export default function ForensicsLab() {
         busy={busy}
         files={files}
         onLoadFile={(path) => act(async () => { setSelected(null); setEntity(null); setGraph(null); await forensics.load({ source: 'file', path }); })}
-        onReload={() => act(async () => { setSelected(null); setEntity(null); setGraph(null); await forensics.load({ source: 'synthetic', n_tx: 20000, seed: Math.floor(Math.random() * 1000) }); })}
+        onReload={() => act(async () => { setSelected(null); setEntity(null); setGraph(null); await forensics.load({ source: 'synthetic', n_tx: status?.default_n_tx || 20000, seed: Math.floor(Math.random() * 1000) }); })}
         onRetrain={() => act(async () => { await forensics.retrain(0.1); })}
         onReset={() => act(async () => { await forensics.resetModel(); })}
       />

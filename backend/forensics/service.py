@@ -31,7 +31,15 @@ from backend.forensics.synth import SynthConfig, generate_dataset
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_SYNTH_TX = 20_000
+def _default_tx() -> int:
+    """Default synthetic dataset size; lower it with CHAINTRACE_DEFAULT_TX on small hosts."""
+    try:
+        return min(max(int(os.environ.get("CHAINTRACE_DEFAULT_TX", "20000")), 500), 400_000)
+    except ValueError:
+        return 20_000
+
+
+DEFAULT_SYNTH_TX = _default_tx()
 
 
 def data_dir() -> Path:
@@ -172,6 +180,7 @@ class ForensicsService:
                 "n_entities": int(r.et.n_entities),
                 "n_active_entities": int(r.n_ranked),
                 "n_alerts": int((r.scores["rank"] > 0).sum()),
+                "default_n_tx": DEFAULT_SYNTH_TX,
                 "peer_groups": _jsonable(r.peer.descriptions),
                 "last_retrain": self.last_retrain,
                 "n_feedback": len(self.store.list_feedback(self.fingerprint)),
