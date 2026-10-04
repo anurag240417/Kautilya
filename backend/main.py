@@ -1,4 +1,4 @@
-"""ChainTrace application entry point.
+"""Kautilya application entry point.
 
 Initializes logging, the investigation service, and serves the WSGI API.
 """
@@ -33,9 +33,9 @@ def _warm_forensics() -> None:
 
 
 def main(host: str = "127.0.0.1", port: int = 8000) -> None:
-    """Initialize and run the ChainTrace application."""
+    """Initialize and run the Kautilya application."""
     configure_logging()
-    logger.info("ChainTrace starting Investigation API on %s:%d...", host, port)
+    logger.info("Kautilya starting Investigation API on %s:%d...", host, port)
 
     app = create_app()
     from backend.api.service import get_investigation_service
@@ -45,16 +45,16 @@ def main(host: str = "127.0.0.1", port: int = 8000) -> None:
 
     threading.Thread(target=_warm_forensics, name="forensics-warmup", daemon=True).start()
     server = make_server(host, port, app, server_class=ThreadingWSGIServer)
-    logger.info("Serving ChainTrace Investigation API on http://%s:%d", host, port)
+    logger.info("Serving Kautilya Investigation API on http://%s:%d", host, port)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        logger.info("ChainTrace API shutting down.")
+        logger.info("Kautilya API shutting down.")
 
 
 if __name__ == "__main__":
     main(
-        host=os.environ.get("CHAINTRACE_HOST", "127.0.0.1"),
+        host=os.environ.get("KAUTILYA_HOST", "127.0.0.1"),
         # Render, Heroku and similar platforms assign the port through PORT.
-        port=int(os.environ.get("PORT") or os.environ.get("CHAINTRACE_PORT") or "8000"),
+        port=int(os.environ.get("PORT") or os.environ.get("KAUTILYA_PORT") or "8000"),
     )

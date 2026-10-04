@@ -1,4 +1,4 @@
-# ChainTrace — Technical Write-Up
+# Kautilya — Technical Write-Up
 
 ## Problem Statement
 
@@ -10,7 +10,7 @@ Bitcoin's pseudonymous nature makes it a preferred channel for illicit financial
 
 ## Approach
 
-ChainTrace is an **investigative decision-support system** that synthesizes six distinct signal categories into actionable investigative priorities:
+Kautilya is an **investigative decision-support system** that synthesizes six distinct signal categories into actionable investigative priorities:
 
 1. **ML Behavioral** — Supervised classification (illicit/licit prediction)
 2. **Anomaly** — Unsupervised statistical deviance detection
@@ -59,13 +59,13 @@ These signals are architecturally separate — each represents a distinct analyt
 
 ## Model Choice
 
-### Supervised Classification: Gradient Boosted Machine (GBM)
+### Supervised Classification: Random Forest
 
-**Why GBM over Deep Learning?**
+**Why a Random Forest over Deep Learning?**
 
-| Factor | GBM | Deep Learning |
+| Factor | Random Forest | Deep Learning |
 |--------|-----|---------------|
-| Tabular data performance | State of the art | Often worse (Grinsztajn et al., 2022) |
+| Tabular data performance | Strong | Often worse (Grinsztajn et al., 2022) |
 | Training time | Seconds | Minutes to hours |
 | Interpretability | Native feature importance | Requires post-hoc methods |
 | Hardware requirements | CPU only | GPU preferred |
@@ -91,7 +91,7 @@ These signals are architecturally separate — each represents a distinct analyt
 
 ## Multi-Signal Risk Synthesis
 
-Instead of producing a single opaque "risk score," ChainTrace maintains 6 distinct signals and synthesizes them through a transparent, configurable pipeline:
+Instead of producing a single opaque "risk score," Kautilya maintains 6 distinct signals and synthesizes them through a transparent, configurable pipeline:
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -206,7 +206,7 @@ Transaction predictions roll up to wallet/entity level through explicit, documen
 |-------|-----------|-----------|
 | Frontend | React + Vite | Fast builds, modern DX |
 | API | Python WSGI + Pydantic | Zero-dependency, offline |
-| ML | scikit-learn (GBM, IF) | Tabular data, interpretable |
+| ML | scikit-learn (Random Forest, IF) | Tabular data, interpretable |
 | Graph | NetworkX | Pure Python, no DB needed |
 | Validation | Pydantic v2 | Type-safe domain models |
 | Testing | pytest (516 tests) | Comprehensive coverage |

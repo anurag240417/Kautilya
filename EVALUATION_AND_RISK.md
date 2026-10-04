@@ -1,8 +1,8 @@
-# ChainTrace — Evaluation Metrics, Score Distributions, and Probability Interpretation
+# Kautilya — Evaluation Metrics, Score Distributions, and Probability Interpretation
 
 ## 1. Executive Summary
 
-ChainTrace is an investigative decision-support system designed for cryptocurrency transaction forensics. The platform synthesizes machine learning predictions, unsupervised anomaly scores, graph structural patterns, and temporal network correlations to prioritize cases for forensic investigators.
+Kautilya is an investigative decision-support system designed for cryptocurrency transaction forensics. The platform synthesizes machine learning predictions, unsupervised anomaly scores, graph structural patterns, and temporal network correlations to prioritize cases for forensic investigators.
 
 This document establishes the formal definitions, statistical methodologies, and forensic principles governing:
 1. **Model Evaluation Under Extreme Class Imbalance**
@@ -42,7 +42,7 @@ Cryptocurrency transaction graphs evolve over time. Random k-fold cross-validati
 - Future transactions would leak topological and behavioral information into past predictions.
 - The model would learn from future graph connectivity that did not exist at the time of the transaction.
 
-ChainTrace mandates a strict **temporal split protocol**:
+Kautilya mandates a strict **temporal split protocol**:
 - **Training Pool:** Time steps $1 \le t \le 34$ (~70% of chronological horizon).
 - **Out-of-Time Test Pool:** Time steps $35 \le t \le 49$ (~30% of chronological horizon).
 - Models must be evaluated strictly on future time steps that were completely unseen during training, feature scaling, and imputation.
@@ -51,7 +51,7 @@ ChainTrace mandates a strict **temporal split protocol**:
 
 ## 3. Probability Interpretation vs. Model Confidence vs. Risk Score
 
-A foundational forensic principle of ChainTrace is that **model outputs, statistical deviance, and investigative risk are distinct concepts and must never be used interchangeably** (`AGENTS.md §3.6`, `CONTEXT.md`).
+A foundational forensic principle of Kautilya is that **model outputs, statistical deviance, and investigative risk are distinct concepts and must never be used interchangeably** (`AGENTS.md §3.6`, `CONTEXT.md`).
 
 ```mermaid
 flowchart TD
@@ -116,7 +116,7 @@ The final risk score ($S \in [0.0, 100.0]$) maps into four operational priority 
 | **LOW** | $0.0 \le S < 40.0$ | **Routine Baseline.** Typical licit patterns, low anomaly deviance, and standard network observations. No proactive investigation required. |
 
 ### 4.2 Dynamic Normalization
-Unlike brittle static weighting systems, ChainTrace dynamically normalizes active signals:
+Unlike brittle static weighting systems, Kautilya dynamically normalizes active signals:
 $$S_{base} = 100 \times \frac{\sum_{i \in \text{Active}} w_i \cdot s_i}{\sum_{i \in \text{Active}} w_i}$$
 where $w_i$ represents the configured signal weight ($w_{behavioral} = 0.35$, $w_{graph} = 0.25$, $w_{anomaly} = 0.20$, $w_{correlation} = 0.20$, $w_{known} = 0.40$).
 

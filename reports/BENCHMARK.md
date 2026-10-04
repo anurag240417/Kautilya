@@ -1,4 +1,4 @@
-# ChainTrace Benchmark Report
+# Kautilya Benchmark Report
 
 - Dataset: **Elliptic++ (txs_features/txs_classes)**
 - Features: M1 (blockchain) (182 columns)

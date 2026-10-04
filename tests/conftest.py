@@ -1,4 +1,4 @@
-"""Shared pytest fixtures for ChainTrace tests."""
+"""Shared pytest fixtures for Kautilya tests."""
 
 from datetime import UTC, datetime
 

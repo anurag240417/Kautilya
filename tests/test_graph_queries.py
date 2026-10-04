@@ -1,7 +1,7 @@
 """Tests for graph path queries and investigation functions."""
 
 from backend.domain.graph import AddrAddrEdge, AddrTxEdge, TxAddrEdge, TxTxEdge
-from backend.graph.builder import ChainTraceGraph
+from backend.graph.builder import KautilyaGraph
 from backend.graph.paths import (
     find_all_simple_paths,
     find_common_counterparties,
@@ -12,7 +12,7 @@ from backend.graph.paths import (
 )
 
 
-def _build_sample_graph() -> ChainTraceGraph:
+def _build_sample_graph() -> KautilyaGraph:
     """Build a small graph for query testing.
 
     Topology:
@@ -22,7 +22,7 @@ def _build_sample_graph() -> ChainTraceGraph:
         addrA --[addr_addr]--> addrD
         tx3   --[tx_addr]--> addrE
     """
-    cg = ChainTraceGraph()
+    cg = KautilyaGraph()
     cg.add_addr_tx_edges([
         AddrTxEdge(input_address="addrA", txid=1),
         AddrTxEdge(input_address="addrC", txid=2),
@@ -192,7 +192,7 @@ def test_transaction_chain_missing_node():
 
 def test_transaction_chain_no_tx_tx_edges():
     """Chain with only addr edges doesn't follow non-tx_tx edges."""
-    cg = ChainTraceGraph()
+    cg = KautilyaGraph()
     cg.add_addr_tx_edges([AddrTxEdge(input_address="addr1", txid=10)])
     cg.add_tx_addr_edges([TxAddrEdge(txid=10, output_address="addr2")])
     chain = get_transaction_chain(cg, 10, depth=3, direction="forward")

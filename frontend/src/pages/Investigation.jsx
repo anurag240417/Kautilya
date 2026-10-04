@@ -144,8 +144,8 @@ export default function Investigation() {
         fetchEntityInvestigation(activeEntityId, activeEntityType);
       }
     };
-    window.addEventListener('chaintrace-simulation-update', handleSimUpdate);
-    return () => window.removeEventListener('chaintrace-simulation-update', handleSimUpdate);
+    window.addEventListener('kautilya-simulation-update', handleSimUpdate);
+    return () => window.removeEventListener('kautilya-simulation-update', handleSimUpdate);
   }, [activeEntityId, activeEntityType, fetchEntityInvestigation]);
 
   const handleSearch = (id, type) => {

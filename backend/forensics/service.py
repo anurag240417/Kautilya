@@ -31,10 +31,11 @@ from backend.forensics.synth import SynthConfig, generate_dataset
 
 logger = logging.getLogger(__name__)
 
+
 def _default_tx() -> int:
-    """Default synthetic dataset size; lower it with CHAINTRACE_DEFAULT_TX on small hosts."""
+    """Default synthetic dataset size; lower it with KAUTILYA_DEFAULT_TX on small hosts."""
     try:
-        return min(max(int(os.environ.get("CHAINTRACE_DEFAULT_TX", "20000")), 500), 400_000)
+        return min(max(int(os.environ.get("KAUTILYA_DEFAULT_TX", "20000")), 500), 400_000)
     except ValueError:
         return 20_000
 
@@ -43,7 +44,7 @@ DEFAULT_SYNTH_TX = _default_tx()
 
 
 def data_dir() -> Path:
-    return Path(os.environ.get("CHAINTRACE_DATA_DIR", str(Path.cwd() / "data"))).resolve()
+    return Path(os.environ.get("KAUTILYA_DATA_DIR", str(Path.cwd() / "data"))).resolve()
 
 
 def safe_data_path(rel: str) -> Path:
@@ -99,6 +100,11 @@ def _reasons(res: ForensicsResult, eid: int) -> list[str]:
         r.append("uniform inbound amounts")
     if f["max_n_in_sent"] >= 10:
         r.append("consolidation")
+    s = res.scores.loc[eid]
+    if bool(s["is_seed"]):
+        r.append("seed (known illicit)")
+    elif 1 <= int(s["seed_hops"]) <= 2 and float(s["seed_risk"]) > 0:
+        r.append(f"{int(s['seed_hops'])} hop{'s' if int(s['seed_hops']) != 1 else ''} from seed")
     return r
 
 
@@ -181,6 +187,7 @@ class ForensicsService:
                 "n_active_entities": int(r.n_ranked),
                 "n_alerts": int((r.scores["rank"] > 0).sum()),
                 "default_n_tx": DEFAULT_SYNTH_TX,
+                "n_seeds": int(r.seed.n_seeds) if r.seed is not None else 0,
                 "peer_groups": _jsonable(r.peer.descriptions),
                 "last_retrain": self.last_retrain,
                 "n_feedback": len(self.store.list_feedback(self.fingerprint)),
@@ -189,6 +196,7 @@ class ForensicsService:
 
     def alerts(
         self,
+        include_seeds: bool = False,
         limit: int = 50,
         offset: int = 0,
         min_score: float = 0.0,
@@ -196,7 +204,11 @@ class ForensicsService:
         search: str | None = None,
     ) -> dict:
         r = self.ensure_loaded()
-        t = r.scores[(r.scores["rank"] > 0) & (r.scores["score"] >= min_score)]
+        sc = r.scores
+        listed = (sc["rank"] > 0) | (
+            include_seeds & sc["is_seed"] & sc["active"] & (sc["score"] > 0)
+        )
+        t = sc[listed & (sc["score"] >= min_score)]
         if tier:
             t = t[t["tier"] == tier]
         if search:
@@ -206,21 +218,29 @@ class ForensicsService:
             else:
                 # A TXID (or an 8+ character prefix of one): show every entity that sent
                 # or received in that transaction.
-                txm = np.flatnonzero(
-                    r.ds.tx["txid"].astype(str).str.lower().str.startswith(s).to_numpy()
-                ) if len(s) >= 8 else np.array([], dtype=np.int64)
+                txm = (
+                    np.flatnonzero(
+                        r.ds.tx["txid"].astype(str).str.lower().str.startswith(s).to_numpy()
+                    )
+                    if len(s) >= 8
+                    else np.array([], dtype=np.int64)
+                )
                 ents: set[int] = set()
                 if len(txm):
                     cl = r.et.addr_cluster
                     for frame in (r.ds.inputs, r.ds.outputs):
-                        ents |= set(cl[frame["addr"].to_numpy()[np.isin(frame["tx_idx"].to_numpy(), txm)]])
+                        ents |= set(
+                            cl[frame["addr"].to_numpy()[np.isin(frame["tx_idx"].to_numpy(), txm)]]
+                        )
                 ids = np.flatnonzero(
                     pd.Series(r.ds.addresses).str.lower().str.contains(s, regex=False).to_numpy()
                 )
                 ents |= set(np.unique(r.et.addr_cluster[ids]).tolist())
                 t = t[t.index.isin(list(ents))]
         total = len(t)
-        t = t.sort_values("rank").iloc[offset : offset + limit]
+        # New leads are ordered by rank. With seeds shown they are interleaved by score and flagged.
+        order_by = (["score", "rank"], [False, True]) if include_seeds else (["rank"], [True])
+        t = t.sort_values(order_by[0], ascending=order_by[1]).iloc[offset : offset + limit]
         fb = {
             f["entity_id"]: f["verdict"]
             for f in reversed(self.store.list_feedback(self.fingerprint))
@@ -239,6 +259,7 @@ class ForensicsService:
                 "structural_score": round(float(s["heuristic"]), 4),
                 "network_obfuscation": round(float(s["network"]), 4),
                 "n_addresses": int(r.et.features.at[eid, "n_addresses"]),
+                "is_seed": bool(s["is_seed"]),
                 "reasons": _reasons(r, eid),
                 "verdict": fb.get(eid),
             }

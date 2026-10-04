@@ -1,4 +1,4 @@
-"""ChainTrace Core Component Benchmarks.
+"""Kautilya Core Component Benchmarks.
 
 Measures latency and throughput of key investigation pipeline components:
 - Service layer API operations (transaction, wallet, alert, graph lookups)
@@ -210,7 +210,7 @@ def run_benchmarks() -> str:
     """Execute all benchmarks and return formatted report."""
     lines: list[str] = []
     lines.append("=" * 100)
-    lines.append("ChainTrace Core Component Benchmarks")
+    lines.append("Kautilya Core Component Benchmarks")
     lines.append("=" * 100)
     lines.append("")
 

@@ -2,20 +2,20 @@
 #
 # Put raw datasets (CSV / JSON / XML) in ./data and load them from the
 # Forensics Lab, or analyse from the command line:
-#   docker compose run --rm chaintrace python -m scripts.analyze_dataset data/yourfile.csv
+#   docker compose run --rm kautilya python -m scripts.analyze_dataset data/yourfile.csv
 #
 # Optional real GeoIP: drop dbip-country-lite.csv and asn.csv into ./geoip
 # (see docs/GEOIP_SETUP.md). Without them a coarse built-in table is used.
 services:
-  chaintrace:
+  kautilya:
     build: .
-    image: chaintrace:latest
+    image: kautilya:latest
     ports:
       - "8000:8000"
     volumes:
       - ./data:/app/data:ro
       - ./geoip:/app/geoip:ro
-      - chaintrace-state:/app/state
+      - kautilya-state:/app/state
     restart: unless-stopped
     read_only: true
     tmpfs:
@@ -24,4 +24,4 @@ services:
       - no-new-privileges:true
 
 volumes:
-  chaintrace-state:
+  kautilya-state:

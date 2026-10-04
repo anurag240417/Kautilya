@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from backend.graph.builder import ChainTraceGraph
+from backend.graph.builder import KautilyaGraph
 from backend.domain.graph import TxTxEdge, AddrTxEdge, TxAddrEdge
 from backend.ml.anomaly import AnomalyDetector
 from backend.ml.classifier import TransactionClassifier
@@ -54,7 +54,7 @@ def _make_trained_classifier(
     return clf, X_test, y_test, time_steps
 
 
-def _make_simple_graph() -> ChainTraceGraph:
+def _make_simple_graph() -> KautilyaGraph:
     """Create a small graph for graph feature testing.
 
     Structure:
@@ -62,7 +62,7 @@ def _make_simple_graph() -> ChainTraceGraph:
         addr_A → tx_1
         tx_3 → addr_B
     """
-    graph = ChainTraceGraph()
+    graph = KautilyaGraph()
 
     graph.add_tx_tx_edges([
         TxTxEdge(source_txid=1, target_txid=2),
@@ -427,7 +427,7 @@ class TestGraphFeatureExtraction:
 
     def test_extract_empty_graph(self):
         """Empty graph returns empty DataFrame with correct columns."""
-        graph = ChainTraceGraph()
+        graph = KautilyaGraph()
         df = extract_graph_feature_df(graph)
 
         assert len(df) == 0

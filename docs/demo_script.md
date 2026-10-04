@@ -1,4 +1,4 @@
-# ChainTrace Live Demo Script — Operation Shadow Mixer
+# Kautilya Live Demo Script — Operation Shadow Mixer
 
 ## Pre-Demo Checklist
 
@@ -13,7 +13,7 @@
 ## Act 1: The Dashboard (2 min)
 
 ### Narration
-> "ChainTrace is a blockchain and network forensics platform that combines multiple sources of evidence — machine learning predictions, anomaly detection, graph topology analysis, temporal correlations, and network observations — to help investigators identify and prioritize suspicious entities."
+> "Kautilya is a blockchain and network forensics platform that combines multiple sources of evidence — machine learning predictions, anomaly detection, graph topology analysis, temporal correlations, and network observations — to help investigators identify and prioritize suspicious entities."
 
 ### Actions
 1. **Open the dashboard** — show the Overview page
@@ -105,10 +105,10 @@
 ## Act 7: Architecture & Key Decisions (2 min)
 
 ### Narration
-> "ChainTrace runs fully offline — no network calls, no cloud APIs. Everything from GeoIP lookups to ML inference runs locally."
+> "Kautilya runs fully offline — no network calls, no cloud APIs. Everything from GeoIP lookups to ML inference runs locally."
 
 ### Talking Points
-- **ML Models**: GBM classification + Isolation Forest anomaly detection
+- **ML Models**: Random Forest classification + Isolation Forest anomaly detection
 - **Multi-signal synthesis**: Not a single score — 6 distinct signal categories
 - **Non-accusation principle**: Transaction predictions never become blanket wallet accusations
 - **Synthetic data transparency**: Every synthetic record carries `is_synthetic=True` at the data-model level

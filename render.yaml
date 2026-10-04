@@ -5,7 +5,7 @@
 # There is no login: do not load real or sensitive datasets into a public instance.
 services:
   - type: web
-    name: chaintrace
+    name: kautilya
     runtime: docker
     dockerfilePath: ./Dockerfile
     plan: free            # 512 MB RAM. Measured peak is ~240 MB at 8,000 tx; use "standard" for larger data.
@@ -13,12 +13,12 @@ services:
     autoDeployTrigger: commit
     envVars:
       # Render injects PORT; backend/main.py listens on it.
-      - key: CHAINTRACE_HOST
+      - key: KAUTILYA_HOST
         value: 0.0.0.0
       # Size of the synthetic dataset built at startup and by "Regenerate synthetic data".
       # Keep small on free instances; the default (20000) peaks near 280 MB.
-      - key: CHAINTRACE_DEFAULT_TX
+      - key: KAUTILYA_DEFAULT_TX
         value: "8000"
       # Case/feedback database. Ephemeral on free plans: verdicts are lost on restart.
-      - key: CHAINTRACE_CASE_DB
+      - key: KAUTILYA_CASE_DB
         value: /app/state/cases.db

@@ -8,7 +8,7 @@ campaign and every entity is scored by a model that never saw it (or its
 campaign) in training.  Dashboard scores are therefore honest, not in-sample.
 
 *Fusion* reuses ``backend.risk.scorer.synthesize_risk_score`` so these alerts
-share tiers, weights and safety caps with the rest of ChainTrace.
+share tiers, weights and safety caps with the rest of Kautilya.
 """
 
 from __future__ import annotations
@@ -42,6 +42,7 @@ from backend.forensics.heuristics import (
     evaluate_heuristics,
 )
 from backend.forensics.model import EntityModel
+from backend.forensics.seedrisk import SeedRisk, propagate_seed_risk, seed_boost
 from backend.risk.scorer import SynthesisConfig, synthesize_risk_score
 
 logger = logging.getLogger(__name__)
@@ -61,6 +62,11 @@ class ForensicsConfig:
     max_train_negatives: int = 40_000
     n_peer_groups: int = 8
     train_synth_n_tx: int = 30_000  # when the input has no labels
+    # Seed-based risk propagation. In synthetic ground-truth mode a simulated watch list of this
+    # fraction of the illicit entities is used as seeds; with analyst labels, confirmed leads are seeds.
+    seed_fraction: float = 0.10
+    seed_boost_weight: float = 0.5
+    seed_max_hops: int = 4
 
 
 @dataclass
@@ -93,6 +99,7 @@ class ForensicsResult:
     n_ranked: int = 0
     model_version: str = ""
     alerts: list[dict] = field(default_factory=list)
+    seed: SeedRisk | None = None
 
     def model_for(self, eid: int) -> EntityModel:
         return self.models[int(self.entity_fold[eid])]
@@ -328,13 +335,31 @@ def run_forensics(
                 anomaly[te] = m.anomaly_score(X.iloc[te])
     timings["model_s"] = time.perf_counter() - t
 
-    # ---- fusion ------------------------------------------------------------
+    # ---- seed-based risk propagation ---------------------------------------
     t = time.perf_counter()
     F = et.features
+    is_service = ((F["in_degree"] >= 30) & (F["out_degree"] >= 8)) | (F["n_addresses"] >= 50)
+    seed_ids = np.array([], dtype=np.int64)
+    if label_source == "analyst_labels":
+        seed_ids = np.flatnonzero(y == 1)
+    elif label_source == "ground_truth_synthetic" and cfg.seed_fraction > 0:
+        pos = np.flatnonzero(active & (y == 1))
+        if len(pos):
+            k = min(len(pos), max(2, int(len(pos) * cfg.seed_fraction)))
+            seed_ids = np.random.default_rng(cfg.seed + 101).choice(pos, k, replace=False)
+    sr = propagate_seed_risk(
+        prep.graph.adjacency, seed_ids, absorbing=is_service.to_numpy(), max_hops=cfg.seed_max_hops
+    )
+    timings["seed_risk_s"] = time.perf_counter() - t
+
+    # ---- fusion ------------------------------------------------------------
+    t = time.perf_counter()
     heur = structural_score(F, prep.graph.propagation)
     network = F["network_obfuscation"].to_numpy()
     burst = temporal_burst_score(F)
-    cand = active & ((p >= 0.05) | (heur > 0) | (anomaly >= 0.98) | (network >= 0.5))
+    cand = active & (
+        (p >= 0.05) | (heur > 0) | (anomaly >= 0.98) | (network >= 0.5) | (sr.risk >= 0.02)
+    )
     ci = np.flatnonzero(cand)
     score = np.zeros(n_ent)
     tier = np.array(["low"] * n_ent, dtype=object)
@@ -342,18 +367,27 @@ def run_forensics(
     if len(ci):
         s, tr_, ac = fuse(p[ci], anomaly[ci], heur[ci], network[ci], burst[ci])
         score[ci], tier[ci], act[ci] = s, tr_, ac
+    score_base = score.copy()
+    if len(ci) and sr.n_seeds:
+        # Seeds are already known: they are not boosted for being seeds and are not ranked as new leads.
+        proximity = np.where(sr.is_seed[ci], 0.0, sr.risk[ci])
+        boosted = np.round(seed_boost(score[ci], proximity, cfg.seed_boost_weight), 2)
+        changed = boosted > score[ci]
+        for j in np.flatnonzero(changed):
+            tier[ci[j]] = FUSION.tier_config.determine_tier(float(boosted[j])).tier.value
+            act[ci[j]] = (act[ci[j]] + ",seed_proximity").lstrip(",")
+        score[ci] = boosted
     timings["fusion_s"] = time.perf_counter() - t
 
     order = np.argsort(-score, kind="stable")
     rank = np.zeros(n_ent, dtype=np.int64)
-    ranked = order[score[order] > 0]
+    ranked = order[(score[order] > 0) & ~sr.is_seed[order]]  # seeds are known, not new leads
     rank[ranked] = np.arange(1, len(ranked) + 1)
 
     t = time.perf_counter()
     pg = peer_groups(X[[c for c in X.columns]], active, cfg.n_peer_groups, cfg.seed)
     timings["peer_groups_s"] = time.perf_counter() - t
 
-    is_service = ((F["in_degree"] >= 30) & (F["out_degree"] >= 8)) | (F["n_addresses"] >= 50)
     scores = pd.DataFrame(
         {
             "p": p,
@@ -362,6 +396,11 @@ def run_forensics(
             "network": network,
             "burst": burst,
             "score": score,
+            "score_base": score_base,
+            "seed_risk": sr.risk,
+            "seed_hops": sr.hops,
+            "seed_nearest": sr.nearest,
+            "is_seed": sr.is_seed,
             "tier": tier,
             "active_signals": act,
             "rank": rank,
@@ -388,10 +427,14 @@ def run_forensics(
         timings=timings,
         n_ranked=int(active.sum()),
         model_version=version,
+        seed=sr,
     )
     ytruth = truth_labels["is_illicit"].to_numpy(dtype=float) if truth_labels is not None else None
     res.metrics = compute_metrics(
-        res, ytruth, labelled_mask=~np.isnan(y) if label_source == "analyst_labels" else None
+        res,
+        ytruth,
+        labelled_mask=~np.isnan(y) if label_source == "analyst_labels" else None,
+        exclude=sr.is_seed,
     )
     timings["total_s"] = time.perf_counter() - t_all
     logger.info(
@@ -408,7 +451,10 @@ def run_forensics(
 
 
 def compute_metrics(
-    res: ForensicsResult, y: np.ndarray | None, labelled_mask: np.ndarray | None = None
+    res: ForensicsResult,
+    y: np.ndarray | None,
+    labelled_mask: np.ndarray | None = None,
+    exclude: np.ndarray | None = None,
 ) -> dict:
     """Dataset-level summary: heuristics vs truth, clustering quality, ranking quality.
 
@@ -432,14 +478,31 @@ def compute_metrics(
     if labelled_mask is not None:
         m &= ~labelled_mask
         key = "ranking_unlabelled"
+    if exclude is not None:
+        m &= ~exclude  # seeds are already known; scoring them would inflate accuracy
     if y[m].sum() >= 1 and (1 - y[m]).sum() >= 1:
         yy = y[m].astype(int)
         S = res.scores[m]
         ks = (10, 25, 50, 100)
         out[key] = {
             "fused_score": ranking_metrics(yy, S["score"].to_numpy(), ks=ks),
+            "fused_without_seed_boost": ranking_metrics(yy, S["score_base"].to_numpy(), ks=ks),
             "model_probability": ranking_metrics(yy, S["p"].to_numpy(), ks=ks),
             "structural_heuristics_only": ranking_metrics(yy, S["heuristic"].to_numpy(), ks=ks),
             "anomaly_only": ranking_metrics(yy, S["anomaly"].to_numpy(), ks=ks),
         }
+        if res.seed is not None and res.seed.n_seeds:
+            out[key]["seed_propagation_only"] = ranking_metrics(
+                yy, S["seed_risk"].to_numpy(), ks=ks
+            )
+            near = (S["seed_hops"].to_numpy() >= 1) & (S["seed_hops"].to_numpy() <= 2)
+            out["seeds"] = {
+                "n_seeds": res.seed.n_seeds,
+                "non_seed_entities_within_2_hops": int(near.sum()),
+                "illicit_share_within_2_hops": float(yy[near].mean()) if near.any() else None,
+                "illicit_share_overall": float(yy.mean()),
+                "illicit_found_within_2_hops": float(near[yy == 1].mean())
+                if (yy == 1).any()
+                else None,
+            }
     return out

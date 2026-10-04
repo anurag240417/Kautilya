@@ -77,6 +77,7 @@ function StatusStrip({ status, onReload, onRetrain, onReset, onLoadFile, files, 
         <Chip>model: {status.model_version}</Chip>
         <Chip>GeoIP: {status.geoip_source}</Chip>
         <Chip>feedback: {status.n_feedback}</Chip>
+        {status.n_seeds > 0 && <Chip>seed wallets: {status.n_seeds}</Chip>}
         {status.dataset.has_ground_truth && <Chip color="#C9A93E">SYNTHETIC DATA</Chip>}
         <span style={{ flex: 1 }} />
         {files.length > 0 && (
@@ -136,7 +137,7 @@ function AlertsTable({ data, selected, onSelect, basket, toggleBasket }) {
             <td onClick={(e) => e.stopPropagation()}>
               <input type="checkbox" checked={basket.includes(a.entity_id)} onChange={() => toggleBasket(a.entity_id)} aria-label="Add to report" />
             </td>
-            <td style={{ fontFamily: 'var(--ct-font-mono)' }}>{a.rank}</td>
+            <td style={{ fontFamily: 'var(--ct-font-mono)' }}>{a.is_seed ? 'seed' : a.rank}</td>
             <td>
               <div style={{ fontWeight: 600 }}>{a.label}</div>
               <div style={{ fontSize: 10, color: 'var(--ct-text-muted)' }}>
@@ -168,6 +169,20 @@ function Evidence({ e }) {
         <Bar label="Anomaly percentile (novelty, not guilt)" value={s.anomaly_percentile} right={pct(s.anomaly_percentile)} color="#C9A93E" />
         <Bar label="Network obfuscation (Tor / VPN / geo-hops)" value={s.network_obfuscation} right={num(s.network_obfuscation, 2)} color="#7B68AE" />
         <Bar label="Temporal burst" value={s.temporal_burst} right={num(s.temporal_burst, 2)} color="#4A90D9" />
+        {e.seed_proximity && e.seed_proximity.n_seeds > 0 && (
+          <Bar
+            label={
+              e.seed_proximity.is_seed
+                ? 'Seed proximity: this entity IS a known-illicit seed'
+                : e.seed_proximity.hops
+                  ? `Seed proximity: ${e.seed_proximity.hops} hop${e.seed_proximity.hops === 1 ? '' : 's'} from known-illicit seed ${e.seed_proximity.nearest_seed} (+${e.seed_proximity.boost_points} pts)`
+                  : 'Seed proximity: not near any known-illicit seed'
+            }
+            value={e.seed_proximity.risk}
+            right={num(e.seed_proximity.risk, 2)}
+            color="#E8ECF1"
+          />
+        )}
       </div>
 
       <div>
@@ -300,6 +315,7 @@ export default function ForensicsLab() {
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [offset, setOffset] = useState(0);
+  const [showSeeds, setShowSeeds] = useState(false);
   const [selected, setSelected] = useState(null);
   const [entity, setEntity] = useState(null);
   const [graph, setGraph] = useState(null);
@@ -318,9 +334,9 @@ export default function ForensicsLab() {
   const loadAlerts = useCallback(async () => {
     try {
       setError(null);
-      setAlerts(await forensics.alerts({ limit: LIMIT, offset, tier, search }));
+      setAlerts(await forensics.alerts({ limit: LIMIT, offset, tier, search, include_seeds: showSeeds ? 1 : '' }));
     } catch (err) { setError(err.message); }
-  }, [offset, tier, search]);
+  }, [offset, tier, search, showSeeds]);
 
   // First visit: the server builds the default dataset lazily.
   useEffect(() => {
@@ -396,6 +412,10 @@ export default function ForensicsLab() {
               <option value="medium">Medium</option>
               <option value="low">Low</option>
             </select>
+            <label style={{ fontSize: 11, color: 'var(--ct-text-secondary)', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <input type="checkbox" checked={showSeeds} onChange={(e) => { setOffset(0); setShowSeeds(e.target.checked); }} />
+              show known seeds
+            </label>
             <input placeholder="E-123, address or TXID" value={search} onChange={(e) => { setOffset(0); setSearch(e.target.value); }} style={{ width: 190 }} />
           </div>
           {alerts ? (
@@ -407,7 +427,7 @@ export default function ForensicsLab() {
             <span style={{ flex: 1 }} />
             <span style={{ color: 'var(--ct-text-secondary)' }}>{basket.length} selected for report</span>
             <a
-              href={basket.length ? forensics.reportUrl(basket, 'ChainTrace investigation report', 'analyst') : undefined}
+              href={basket.length ? forensics.reportUrl(basket, 'Kautilya investigation report', 'analyst') : undefined}
               style={{ pointerEvents: basket.length ? 'auto' : 'none', opacity: basket.length ? 1 : 0.4, textDecoration: 'underline' }}
             >
               Download report (HTML, print to PDF)
@@ -434,7 +454,7 @@ export default function ForensicsLab() {
                 <h2>{entity.label}</h2>
                 <RiskBadge tier={entity.score.tier} score={entity.score.final} />
                 <span style={{ fontSize: 12, color: 'var(--ct-text-secondary)' }}>
-                  rank #{entity.score.rank} of {entity.score.of.toLocaleString()} | {entity.n_addresses} addresses | {entity.first_seen} to {entity.last_seen}
+                  {entity.score.rank === 0 ? 'known seed' : `rank #${entity.score.rank} of ${entity.score.of.toLocaleString()}`} | {entity.n_addresses} addresses | {entity.first_seen} to {entity.last_seen}
                 </span>
               </div>
               <div style={{ display: 'flex', gap: 6 }}>

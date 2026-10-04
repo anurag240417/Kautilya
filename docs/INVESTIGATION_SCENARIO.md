@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary & Objective
 
-An automated alert was triggered by the ChainTrace triage engine on transaction `TX-1001` (14.5 BTC). Preliminary machine learning behavioral signals flagged the transaction as **Critical Priority (Score: 92.5/100)** with illicit probability $p = 0.94$.
+An automated alert was triggered by the Kautilya triage engine on transaction `TX-1001` (14.5 BTC). Preliminary machine learning behavioral signals flagged the transaction as **Critical Priority (Score: 92.5/100)** with illicit probability $p = 0.94$.
 
 The investigative objective is to:
 1. **Verify Evidence**: Decompose the risk score into its constituent analytical signals (ML Behavioral, Anomaly, Graph Topology, Temporal, and Network Correlations).
@@ -71,7 +71,7 @@ The investigative objective is to:
   - Outgoing paths from the mixer branch into splits `1002` and `1003`, which converge into layering wallet `1LayerHopZqfDmpv9nRy`, flow through consolidation transaction `1004`, and terminate at cash-out wallet `1CashOutNn3bVx7wqFsT`.
 - **Action (Shortest Path Query)**:
   - Query shortest path: `source=1DrK44np3gMKuvcGeFHv` $\to$ `target=1CashOutNn3bVx7wqFsT`.
-  - **Result**: ChainTrace computes the 4-hop chain:
+  - **Result**: Kautilya computes the 4-hop chain:
     $$\text{Source Wallet} \xrightarrow{\text{TX-1001}} \text{Mixer Wallet} \xrightarrow{\text{TX-1002}} \text{Layer Hop} \xrightarrow{\text{TX-1004}} \text{Cash-Out Wallet}$$
   - The path edges carry explicit relationship labels (`addr_tx`, `tx_addr`) and synthetic provenance markers.
 
@@ -105,7 +105,7 @@ The investigative objective is to:
 
 ## 4. Signal Synthesis & Scoring Breakdown
 
-ChainTrace computes the priority score through dynamic multi-signal synthesis:
+Kautilya computes the priority score through dynamic multi-signal synthesis:
 
 $$\text{Final Priority Score} = 100 \times \min\left(1.0, \, \frac{\sum_{s} w_s \cdot \text{signal}_s}{\sum_{s} w_s} + \text{corroboration\_boost}\right)$$
 
@@ -126,7 +126,7 @@ For isolated anomaly `TX-1003`:
 ## 5. Judge Presentation Talking Points
 
 1. **"Why isn't this just another dark theme dashboard?"**
-   > *"ChainTrace is built as an evidential decision-support system for law enforcement and financial intelligence units. Every score is a triage rank, not a verdict. Notice how our Evidence Trail decomposes ML predictions into natural language metrics rather than opaque feature vectors."*
+   > *"Kautilya is built as an evidential decision-support system for law enforcement and financial intelligence units. Every score is a triage rank, not a verdict. Notice how our Evidence Trail decomposes ML predictions into natural language metrics rather than opaque feature vectors."*
 
 2. **"How do you prevent false accusations against cryptocurrency exchanges or shared wallets?"**
    > *"Under our Entity Rollup Traceability principle, transactions maintain their individual scores permanently. When looking at a wallet like `1MixService...`, we never brand the whole entity illicit; we show an auditable table of contributing transactions with explicit disclaimers."*

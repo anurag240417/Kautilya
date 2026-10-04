@@ -24,6 +24,7 @@ Use this as the content for the ethics / limitations slide and for judge questio
 | Payment processors forwarding in minutes | rapid-hop layering | Needs a *chain* of three or more single-output hops, not one forward |
 | Privacy users on Tor, CoinJoin participants | obfuscation | CoinJoin alone adds only 0.12; network signal is capped and fused, never decisive alone |
 | Legitimate users with slow peel-like change spending | peel chains | Peel links require hops within 12 hours |
+| Victims and customers of illicit entities | seed proximity | Proximity only ever *raises* a score, is shown with its hop count, and exchange-style hubs neither pass nor receive seed risk |
 | Unusual but innocent entities | anomaly | Anomaly-only alerts are capped (uncorroborated cap 60/100) |
 
 ## Limitations (say these out loud)

@@ -1,7 +1,7 @@
 """Path finding and investigation-oriented graph queries.
 
 Implements shortest-path, ego-graph, connected-wallet, and
-transaction-chain queries over the ``ChainTraceGraph``. These
+transaction-chain queries over the ``KautilyaGraph``. These
 support the investigation workflow questions listed in
 ARCHITECTURE.md — Graph Design.
 """
@@ -13,18 +13,18 @@ from typing import TYPE_CHECKING
 import networkx as nx
 
 if TYPE_CHECKING:
-    from backend.graph.builder import ChainTraceGraph
+    from backend.graph.builder import KautilyaGraph
 
 
 def find_shortest_path(
-    graph: ChainTraceGraph,
+    graph: KautilyaGraph,
     source: str | int,
     target: str | int,
 ) -> list[str | int] | None:
     """Find the shortest directed path between two nodes.
 
     Args:
-        graph: The ChainTrace investigation graph.
+        graph: The Kautilya investigation graph.
         source: Source node ID.
         target: Target node ID.
 
@@ -39,7 +39,7 @@ def find_shortest_path(
 
 
 def find_all_simple_paths(
-    graph: ChainTraceGraph,
+    graph: KautilyaGraph,
     source: str | int,
     target: str | int,
     max_depth: int = 6,
@@ -50,7 +50,7 @@ def find_all_simple_paths(
     reasonable ``max_depth``.
 
     Args:
-        graph: The ChainTrace investigation graph.
+        graph: The Kautilya investigation graph.
         source: Source node ID.
         target: Target node ID.
         max_depth: Maximum path length (default 6).
@@ -65,7 +65,7 @@ def find_all_simple_paths(
 
 
 def get_ego_graph(
-    graph: ChainTraceGraph,
+    graph: KautilyaGraph,
     node_id: str | int,
     radius: int = 1,
 ) -> nx.MultiDiGraph | None:
@@ -75,7 +75,7 @@ def get_ego_graph(
     (ignoring edge direction for neighbour discovery).
 
     Args:
-        graph: The ChainTrace investigation graph.
+        graph: The Kautilya investigation graph.
         node_id: Center node.
         radius: Number of hops from center (default 1).
 
@@ -89,7 +89,7 @@ def get_ego_graph(
 
 
 def get_connected_wallets(
-    graph: ChainTraceGraph,
+    graph: KautilyaGraph,
     wallet_address: str,
     max_depth: int = 2,
 ) -> set[str]:
@@ -98,7 +98,7 @@ def get_connected_wallets(
     Traverses through transactions to discover related wallets.
 
     Args:
-        graph: The ChainTrace investigation graph.
+        graph: The Kautilya investigation graph.
         wallet_address: Starting wallet address.
         max_depth: Maximum traversal depth (default 2).
 
@@ -116,7 +116,7 @@ def get_connected_wallets(
 
 
 def get_transaction_chain(
-    graph: ChainTraceGraph,
+    graph: KautilyaGraph,
     txid: int,
     depth: int = 3,
     direction: str = "both",
@@ -124,7 +124,7 @@ def get_transaction_chain(
     """Extract a chain of transactions following tx→tx money-flow edges.
 
     Args:
-        graph: The ChainTrace investigation graph.
+        graph: The Kautilya investigation graph.
         txid: Starting transaction ID.
         depth: Maximum chain depth (default 3).
         direction: ``"forward"`` (downstream), ``"backward"`` (upstream),
@@ -177,7 +177,7 @@ def _traverse_tx_chain(
 
 
 def find_common_counterparties(
-    graph: ChainTraceGraph,
+    graph: KautilyaGraph,
     addr1: str,
     addr2: str,
 ) -> set[str | int]:
@@ -186,7 +186,7 @@ def find_common_counterparties(
     Useful for identifying shared intermediaries or mixing services.
 
     Args:
-        graph: The ChainTrace investigation graph.
+        graph: The Kautilya investigation graph.
         addr1: First wallet address.
         addr2: Second wallet address.
 

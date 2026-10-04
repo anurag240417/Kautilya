@@ -147,9 +147,9 @@ class TestDemoDatasetIntegrity:
 
     def test_graph_path_connectivity(self, demo):
         """Graph must contain a money flow path from WALLET_A (source) to WALLET_D (cash-out)."""
-        from backend.graph.builder import ChainTraceGraph
+        from backend.graph.builder import KautilyaGraph
 
-        graph = ChainTraceGraph()
+        graph = KautilyaGraph()
         graph.add_addr_tx_edges(demo.graph_edges["addr_tx"])
         graph.add_tx_addr_edges(demo.graph_edges["tx_addr"])
         graph.add_tx_tx_edges(demo.graph_edges["tx_tx"])

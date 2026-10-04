@@ -2,10 +2,10 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 from backend.domain.graph import AddrTxEdge, TxAddrEdge, TxTxEdge, AddrAddrEdge
-from backend.graph.builder import ChainTraceGraph
+from backend.graph.builder import KautilyaGraph
 
 # Create an empty graph
-cg = ChainTraceGraph()
+cg = KautilyaGraph()
 
 # Create a small mock scenario:
 # Wallet A sends to Tx 1
@@ -66,7 +66,7 @@ for node in G.nodes():
         labels[node] = str(node)
 nx.draw_networkx_labels(G, pos, labels, font_size=10, font_weight="bold")
 
-plt.title("ChainTrace Graph Representation Demo")
+plt.title("Kautilya Graph Representation Demo")
 plt.legend(scatterpoints=1)
 plt.axis("off")
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CLI utility to simulate live transaction injection into ChainTrace.
+"""CLI utility to simulate live transaction injection into Kautilya.
 
 Can be run alongside the web UI during live presentations to inject
 transactions one-by-one or in an automated stream.
@@ -42,7 +42,7 @@ def make_request(base_url: str, path: str, method: str = "GET", payload: dict | 
         conn.close()
         return json.loads(resp_data)
     except Exception as e:
-        print(f"\033[91mError connecting to ChainTrace on {host}:{port}: {e}\033[0m")
+        print(f"\033[91mError connecting to Kautilya on {host}:{port}: {e}\033[0m")
         print("Please ensure the backend server is running: ./run_demo.sh")
         sys.exit(1)
 
@@ -51,7 +51,7 @@ def print_status(status: dict) -> None:
     step = status.get("current_step", 0)
     total = status.get("total_steps", 6)
     print("\n" + "=" * 68)
-    print("  \033[1;36mChainTrace Live Ingestion Simulation Status\033[0m")
+    print("  \033[1;36mKautilya Live Ingestion Simulation Status\033[0m")
     print("=" * 68)
     print(f"  Step Progress:      \033[1;32m{step} / {total}\033[0m ({status.get('step_title', '')})")
     print(f"  Headline:           {status.get('step_headline', '')}")
@@ -123,7 +123,7 @@ def auto_stream(base_url: str, interval: float) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="ChainTrace Live Ingestion Simulator")
+    parser = argparse.ArgumentParser(description="Kautilya Live Ingestion Simulator")
     parser.add_argument("--url", default=DEFAULT_URL, help="Base API URL")
     parser.add_argument("--status", action="store_true", help="Print current status")
     parser.add_argument("--step", action="store_true", help="Inject next transaction")

@@ -1,5 +1,10 @@
 # SIH submission, idea 2: pitch, slide outline, demo video, judge Q&A
 
+## The name
+
+**Kautilya** (Chanakya) wrote the Arthashastra, the ancient Indian treatise on statecraft, which covers how a state audits its accounts
+and detects the misuse of public funds. The project applies that idea to a new kind of treasury: tracing illicit money on Bitcoin.
+
 ## One-line differentiator
 
 > **Court-defensible, explainable triage of Bitcoin laundering, fully offline:** every flag carries its evidence, its uncertainty,
@@ -14,7 +19,7 @@ testing, honest uncertainty, cases with feedback, and verifiable reports.
 2. **Solution in one picture:** raw metadata in -> entities -> evidence -> ranked leads -> report.
 3. **Data and schema:** CSV/JSON/XML ingestion, audit of dropped rows, synthetic generator with planted typologies, offline GeoIP + Tor/VPN lists.
 4. **Forensic heuristics:** CoinJoin, dust, change address, peel chain, rapid-hop layering, each validated against planted truth (numbers from `docs/FORENSICS_LAB.md`).
-5. **AI/ML:** Random Forest (calibrated, with interval) + Isolation Forest + graph embeddings/propagation, fused through the risk synthesizer.
+5. **AI/ML:** Random Forest (calibrated, with interval) + Isolation Forest + graph embeddings, plus **risk propagation from seed illicit wallets** (personalised PageRank), fused through the risk synthesizer.
 6. **Explainability:** observation / inference / prediction labels, occlusion contributions, plain-language summary, per-flag TXIDs.
 7. **Network correlation:** first-seen origin, Tor/VPN, geo-hops, wallet-to-IP link with confidence interval (correlation is not attribution).
 8. **Evidence of performance:** baselines, ablation, **leave-one-scenario-out**, robustness, honest limits (slide text from `docs/ETHICS_AND_LIMITS.md`).
@@ -38,7 +43,7 @@ testing, honest uncertainty, cases with feedback, and verifiable reports.
 ## Judge Q&A additions
 
 **Is this real data?** No. The dataset is synthetic and generated to model real typologies; it is marked synthetic everywhere.
-The official dataset can be loaded with `python -m scripts.analyze_dataset` (see `docs/OFFICIAL_DATASET.md`).
+The problem statement lists no dataset ("Dataset Link: Nil") and says participants work with synthetic data, so we generate it (`python -m scripts.generate_dataset`). Any file in the same schema can be loaded with `python -m scripts.analyze_dataset` (see `docs/OFFICIAL_DATASET.md`).
 
 **Why do your numbers look so high?** Because in-distribution synthetic data is easy; plain logistic regression matches our
 Random Forest and we say so. The meaningful test is leave-one-scenario-out, where performance drops and we report it.
@@ -49,6 +54,11 @@ darknet-market scenario the fused score (0.79) beats both rules (0.74) and the m
 **What about real data?** On Elliptic++ (real, labelled, strict out-of-time split) the Random Forest reaches PR-AUC 0.79 and
 precision 1.0 at the top 100, versus 0.30 for logistic regression and 0.07 for chance. Rules and anomaly detection do not help
 there, and accuracy drops sharply in the last time window (concept drift), which we report in `reports/BENCHMARK.md`.
+
+**Do you propagate risk from known illicit wallets?** Yes. Seeds are known-illicit entities (a watch list or analyst-confirmed
+leads). Risk spreads through the money-flow graph with personalised PageRank and each alert shows its hop count to the nearest seed.
+Entities within two hops of a seed are 15 to 18 times more likely to be illicit than average in our tests, and exchange-style hubs
+absorb risk so one exchange cannot taint its customers. It only raises a score, never lowers it.
 
 **How do you avoid falsely accusing someone?** Entities are wallet fragments, never people. Scores are calibrated with
 intervals, anomaly-only alerts are capped, benign look-alikes (exchanges, processors, CoinJoin users) are in the test data,

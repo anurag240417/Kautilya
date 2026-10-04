@@ -56,8 +56,8 @@ export default function Alerts() {
     const handleSimUpdate = () => {
       loadAlerts();
     };
-    window.addEventListener('chaintrace-simulation-update', handleSimUpdate);
-    return () => window.removeEventListener('chaintrace-simulation-update', handleSimUpdate);
+    window.addEventListener('kautilya-simulation-update', handleSimUpdate);
+    return () => window.removeEventListener('kautilya-simulation-update', handleSimUpdate);
   }, [minTier, entityType, status, includeSynthetic, minScore]);
 
   const handleStatusChange = async (alertId, newStatus) => {

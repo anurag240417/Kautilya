@@ -61,6 +61,8 @@ def node_info(res, eid: int) -> dict:
         "is_service": bool(s["is_service"]),
         "n_addresses": int(f["n_addresses"]),
         "peer_group": int(s["peer_group"]),
+        "is_seed": bool(s["is_seed"]),
+        "seed_hops": int(s["seed_hops"]),
     }
     if res.labels is not None and eid in res.labels.index:
         info["truth_illicit"] = bool(res.labels.loc[eid, "is_illicit"])

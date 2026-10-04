@@ -1,6 +1,6 @@
 # Deploying a preview on Render
 
-ChainTrace is designed to run offline. This deploys a **hosted preview on synthetic data** for demos; it is not the air-gapped setup.
+Kautilya is designed to run offline. This deploys a **hosted preview on synthetic data** for demos; it is not the air-gapped setup.
 
 ## Steps
 1. Push the repo to GitHub.
@@ -9,8 +9,8 @@ ChainTrace is designed to run offline. This deploys a **hosted preview on synthe
 4. Open the service URL. The first request after an idle spell is slow (free instances sleep, then the Forensics Lab dataset rebuilds, about 5 to 60 s depending on CPU).
 
 ## What the config does
-* `PORT` is assigned by Render; `backend/main.py` reads it (falls back to `CHAINTRACE_PORT`, then 8000).
-* `CHAINTRACE_DEFAULT_TX=8000` keeps the startup dataset small. Measured peak memory: about 240 MB at 8,000 transactions and
+* `PORT` is assigned by Render; `backend/main.py` reads it (falls back to `KAUTILYA_PORT`, then 8000).
+* `KAUTILYA_DEFAULT_TX=8000` keeps the startup dataset small. Measured peak memory: about 240 MB at 8,000 transactions and
   280 MB at 20,000 (Windows measurement, process total). The free tier has 512 MB.
 * Health check: `/health`.
 

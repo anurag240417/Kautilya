@@ -58,6 +58,7 @@ export default function FlowGraph({ graph, onSelect }) {
           size: 14 + Math.min(n.score, 100) * 0.22,
           center: n.id === graph.center,
           service: n.is_service,
+          seed: n.is_seed,
         },
       })),
       ...graph.edges.map((e) => {
@@ -96,6 +97,7 @@ export default function FlowGraph({ graph, onSelect }) {
           },
         },
         { selector: 'node[?center]', style: { 'border-width': 3, 'border-color': '#E8ECF1' } },
+        { selector: 'node[?seed]', style: { 'border-width': 3, 'border-color': '#E8ECF1', 'border-style': 'dashed' } },
         { selector: 'node[?service]', style: { shape: 'round-rectangle', 'background-opacity': 0.55 } },
         {
           selector: 'edge',
@@ -199,6 +201,7 @@ export default function FlowGraph({ graph, onSelect }) {
         <span><span style={{ color: TRAIL_FORWARD }}>&#9632;</span> onward money trail</span>
         <span><span style={{ color: TRAIL_BACK }}>&#9632;</span> inbound trail (towards sources)</span>
         <span>Rounded square = service-like hub (exchange-style)</span>
+        <span>Dashed white ring = known-illicit seed</span>
         <span>Node size = priority score. Click a node to open it.</span>
       </div>
     </div>

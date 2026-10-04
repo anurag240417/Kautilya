@@ -3,7 +3,7 @@
     python -m scripts.analyze_dataset path/to/dataset.csv [--top 20] [--amount-unit auto|btc|sat]
 
 Prints the ingestion audit (what was accepted, repaired, dropped), heuristic counts
-and the top-ranked investigative leads.  Use this first on the official dataset.
+and the top-ranked investigative leads.  Use this first on any dataset you are given.
 """
 
 from __future__ import annotations

@@ -1,4 +1,4 @@
-"""Tests for ChainTrace domain models.
+"""Tests for Kautilya domain models.
 
 Validates model creation, field constraints, enum values,
 is_synthetic provenance, and error handling for invalid data.

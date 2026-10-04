@@ -40,7 +40,7 @@ export default function Sidebar({ systemStatus = { offline: true, operational: t
               color: 'var(--ct-text-primary)',
             }}
           >
-            ChainTrace
+            Kautilya
           </div>
           <div
             style={{

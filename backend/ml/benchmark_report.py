@@ -25,7 +25,7 @@ def render_markdown(results: dict) -> str:
     """Build the report from the dict written by ``scripts/run_benchmark.py``."""
     meta = results["meta"]
     bench = results["benchmark"]
-    lines: list[str] = ["# ChainTrace Benchmark Report", ""]
+    lines: list[str] = ["# Kautilya Benchmark Report", ""]
     lines += [
         f"- Dataset: **{meta['dataset']}**",
         f"- Features: {meta['feature_set']} ({meta['n_features']} columns)",

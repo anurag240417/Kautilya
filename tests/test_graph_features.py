@@ -1,7 +1,7 @@
 """Tests for graph feature extraction."""
 
 from backend.domain.graph import AddrTxEdge, TxAddrEdge, TxTxEdge
-from backend.graph.builder import ChainTraceGraph
+from backend.graph.builder import KautilyaGraph
 from backend.graph.features import (
     NodeFeatures,
     compute_betweenness_centrality,
@@ -14,7 +14,7 @@ from backend.graph.features import (
 )
 
 
-def _build_feature_graph() -> ChainTraceGraph:
+def _build_feature_graph() -> KautilyaGraph:
     """Build a small graph for feature testing.
 
     Topology:
@@ -22,7 +22,7 @@ def _build_feature_graph() -> ChainTraceGraph:
         addrA --[addr_tx]--> tx2 --[tx_addr]--> addrB
         tx1   --[tx_tx]  --> tx2
     """
-    cg = ChainTraceGraph()
+    cg = KautilyaGraph()
     cg.add_addr_tx_edges([
         AddrTxEdge(input_address="addrA", txid=1),
         AddrTxEdge(input_address="addrA", txid=2),
@@ -71,7 +71,7 @@ def test_degree_features_missing_node():
 
 def test_degree_features_empty_graph():
     """Returns empty dict for empty graph."""
-    cg = ChainTraceGraph()
+    cg = KautilyaGraph()
     assert compute_degree_features(cg, "anything") == {}
 
 
@@ -88,7 +88,7 @@ def test_pagerank_non_empty():
 
 def test_pagerank_empty_graph():
     """Returns empty dict for empty graph."""
-    cg = ChainTraceGraph()
+    cg = KautilyaGraph()
     assert compute_pagerank(cg) == {}
 
 
@@ -105,7 +105,7 @@ def test_betweenness_centrality():
 
 def test_betweenness_centrality_empty():
     """Returns empty dict for empty graph."""
-    cg = ChainTraceGraph()
+    cg = KautilyaGraph()
     assert compute_betweenness_centrality(cg) == {}
 
 
@@ -122,7 +122,7 @@ def test_clustering_coefficients():
 
 def test_clustering_empty():
     """Returns empty dict for empty graph."""
-    cg = ChainTraceGraph()
+    cg = KautilyaGraph()
     assert compute_clustering_coefficients(cg) == {}
 
 
@@ -141,7 +141,7 @@ def test_hits_scores():
 
 def test_hits_empty():
     """Returns empty dicts for empty graph."""
-    cg = ChainTraceGraph()
+    cg = KautilyaGraph()
     hubs, auths = compute_hits(cg)
     assert hubs == {}
     assert auths == {}
@@ -195,7 +195,7 @@ def test_extract_all_features():
 
 def test_extract_all_features_empty():
     """Returns empty dict for empty graph."""
-    cg = ChainTraceGraph()
+    cg = KautilyaGraph()
     assert extract_all_features(cg) == {}
 
 

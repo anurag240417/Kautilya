@@ -5,7 +5,7 @@ PageRank, HITS) for nodes in the investigation graph. These features
 feed into the M2 (blockchain + graph) experimental model stage as
 described in CONTEXT.md — Experimental Progression.
 
-All functions accept a ``ChainTraceGraph`` and return feature
+All functions accept a ``KautilyaGraph`` and return feature
 dictionaries or ``NodeFeatures`` dataclass instances.
 """
 
@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 import networkx as nx
 
 if TYPE_CHECKING:
-    from backend.graph.builder import ChainTraceGraph
+    from backend.graph.builder import KautilyaGraph
 
 
 @dataclass
@@ -48,7 +48,7 @@ class NodeFeatures:
 
 
 def compute_degree_features(
-    graph: ChainTraceGraph, node_id: str | int
+    graph: KautilyaGraph, node_id: str | int
 ) -> dict:
     """Compute degree-based features for a single node.
 
@@ -86,7 +86,7 @@ def compute_degree_features(
 
 
 def compute_pagerank(
-    graph: ChainTraceGraph, alpha: float = 0.85
+    graph: KautilyaGraph, alpha: float = 0.85
 ) -> dict[str | int, float]:
     """Compute PageRank for all nodes in the graph.
 
@@ -95,7 +95,7 @@ def compute_pagerank(
     intermediary.
 
     Args:
-        graph: The ChainTrace investigation graph.
+        graph: The Kautilya investigation graph.
         alpha: Damping factor (default 0.85).
 
     Returns:
@@ -107,7 +107,7 @@ def compute_pagerank(
 
 
 def compute_betweenness_centrality(
-    graph: ChainTraceGraph, k: int | None = None
+    graph: KautilyaGraph, k: int | None = None
 ) -> dict[str | int, float]:
     """Compute betweenness centrality for all nodes.
 
@@ -115,7 +115,7 @@ def compute_betweenness_centrality(
     of the graph — potentially mixing services or intermediaries.
 
     Args:
-        graph: The ChainTrace investigation graph.
+        graph: The Kautilya investigation graph.
         k: Number of source nodes to sample for approximation.
             ``None`` computes exact centrality.
 
@@ -128,7 +128,7 @@ def compute_betweenness_centrality(
 
 
 def compute_clustering_coefficients(
-    graph: ChainTraceGraph,
+    graph: KautilyaGraph,
 ) -> dict[str | int, float]:
     """Compute clustering coefficients for all nodes.
 
@@ -146,7 +146,7 @@ def compute_clustering_coefficients(
 
 
 def compute_hits(
-    graph: ChainTraceGraph,
+    graph: KautilyaGraph,
 ) -> tuple[dict[str | int, float], dict[str | int, float]]:
     """Compute HITS hub and authority scores.
 
@@ -169,7 +169,7 @@ def compute_hits(
 
 
 def extract_node_features(
-    graph: ChainTraceGraph, node_id: str | int
+    graph: KautilyaGraph, node_id: str | int
 ) -> NodeFeatures | None:
     """Extract all graph-derived features for a single node.
 
@@ -209,7 +209,7 @@ def extract_node_features(
 
 
 def extract_all_features(
-    graph: ChainTraceGraph,
+    graph: KautilyaGraph,
 ) -> dict[str | int, NodeFeatures]:
     """Extract graph-derived features for every node in the graph.
 

@@ -1,1 +1,1 @@
-# ChainTrace benchmarks package.
+# Kautilya benchmarks package.

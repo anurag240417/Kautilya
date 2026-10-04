@@ -35,8 +35,8 @@ def _edge_attrs(edge: TxTxEdge | AddrTxEdge | TxAddrEdge | AddrAddrEdge,
     }
 
 
-class ChainTraceGraph:
-    """Core in-memory graph structure for ChainTrace.
+class KautilyaGraph:
+    """Core in-memory graph structure for Kautilya.
 
     Wraps a networkx.MultiDiGraph to allow for directed,
     possibly parallel edges (e.g. self-change addresses).

@@ -15,6 +15,9 @@ dataset/
 Thumbs.db
 
 # Forensics Lab runtime state and generated data
-.chaintrace/
+.kautilya/
 data/
 *.db
+
+# Build artifacts
+*.egg-info/

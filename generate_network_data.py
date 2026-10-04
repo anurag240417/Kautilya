@@ -55,7 +55,7 @@ def create_sample_transactions(n: int = 100) -> pd.DataFrame:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="ChainTrace Synthetic Network Data Generator"
+        description="Kautilya Synthetic Network Data Generator"
     )
     parser.add_argument(
         "--sample-size",

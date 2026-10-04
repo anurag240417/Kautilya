@@ -1,4 +1,4 @@
-"""Shared enums and type aliases for ChainTrace domain models."""
+"""Shared enums and type aliases for Kautilya domain models."""
 
 from enum import IntEnum, StrEnum
 
@@ -33,7 +33,7 @@ class ScriptType(StrEnum):
 class EvidenceType(StrEnum):
     """Classification of evidence provenance.
 
-    ChainTrace must distinguish between these categories and never
+    Kautilya must distinguish between these categories and never
     present one as another (see CONTEXT.md — Forensic Principle).
     """
 

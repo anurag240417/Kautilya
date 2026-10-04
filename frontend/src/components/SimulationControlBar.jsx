@@ -69,7 +69,7 @@ export default function SimulationControlBar() {
 
     // Notify all active views to refresh their data
     window.dispatchEvent(
-      new CustomEvent('chaintrace-simulation-update', {
+      new CustomEvent('kautilya-simulation-update', {
         detail: res,
       })
     );
@@ -101,7 +101,7 @@ export default function SimulationControlBar() {
         headline: mode === 'baseline' ? '1 Licit Control TX (TX 1005), 0 Alerts' : 'All 7 TXs, 5 Wallets, 6 Alerts Loaded',
       });
       window.dispatchEvent(
-        new CustomEvent('chaintrace-simulation-update', {
+        new CustomEvent('kautilya-simulation-update', {
           detail: { mode, status: res },
         })
       );

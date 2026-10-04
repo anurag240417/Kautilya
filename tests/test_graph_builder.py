@@ -1,19 +1,19 @@
 """Tests for graph builder logic."""
 
 from backend.domain.graph import AddrAddrEdge, AddrTxEdge, TxAddrEdge, TxTxEdge
-from backend.graph.builder import ChainTraceGraph
+from backend.graph.builder import KautilyaGraph
 
 
-def test_chaintrace_graph_initialization():
+def test_kautilya_graph_initialization():
     """Graph initializes as an empty MultiDiGraph."""
-    cg = ChainTraceGraph()
+    cg = KautilyaGraph()
     assert len(cg.G.nodes) == 0
     assert len(cg.G.edges) == 0
 
 
 def test_add_tx_tx_edges():
     """Transaction-to-transaction edges properly assign nodes as type 'transaction'."""
-    cg = ChainTraceGraph()
+    cg = KautilyaGraph()
     edges = [
         TxTxEdge(source_txid=1, target_txid=2, is_synthetic=False),
         TxTxEdge(source_txid=2, target_txid=3, is_synthetic=True),
@@ -38,7 +38,7 @@ def test_add_tx_tx_edges():
 
 def test_add_addr_tx_edges():
     """Address-to-transaction edges properly distinguish 'wallet' and 'transaction' types."""
-    cg = ChainTraceGraph()
+    cg = KautilyaGraph()
     edges = [AddrTxEdge(input_address="addr1", txid=99, is_synthetic=False)]
     cg.add_addr_tx_edges(edges)
 
@@ -52,7 +52,7 @@ def test_add_addr_tx_edges():
 
 def test_add_tx_addr_edges():
     """Transaction-to-address edges properly assign types."""
-    cg = ChainTraceGraph()
+    cg = KautilyaGraph()
     edges = [TxAddrEdge(txid=100, output_address="addr2", is_synthetic=False)]
     cg.add_tx_addr_edges(edges)
 
@@ -65,7 +65,7 @@ def test_add_tx_addr_edges():
 
 def test_add_addr_addr_edges():
     """Address-to-address edges assign both ends as 'wallet'."""
-    cg = ChainTraceGraph()
+    cg = KautilyaGraph()
     edges = [AddrAddrEdge(input_address="addr1", output_address="addr2", is_synthetic=False)]
     cg.add_addr_addr_edges(edges)
 
@@ -78,7 +78,7 @@ def test_add_addr_addr_edges():
 
 def test_parallel_edges_are_preserved():
     """MultiDiGraph should allow multiple edges between the same two nodes."""
-    cg = ChainTraceGraph()
+    cg = KautilyaGraph()
     # addr1 is an input and output of tx 99 (self-change scenario)
     addr_tx = [AddrTxEdge(input_address="addr1", txid=99, is_synthetic=False)]
     tx_addr = [TxAddrEdge(txid=99, output_address="addr1", is_synthetic=False)]
@@ -96,7 +96,7 @@ def test_parallel_edges_are_preserved():
 
 def test_edge_provenance_attributes_preserved():
     """Edge confidence, provenance, and temporal_context are stored on edges."""
-    cg = ChainTraceGraph()
+    cg = KautilyaGraph()
     edges = [
         TxTxEdge(
             source_txid=10,
@@ -118,8 +118,8 @@ def test_edge_provenance_attributes_preserved():
 
 
 def test_graph_query_helpers():
-    """Introspection and query methods on ChainTraceGraph work correctly."""
-    cg = ChainTraceGraph()
+    """Introspection and query methods on KautilyaGraph work correctly."""
+    cg = KautilyaGraph()
     cg.add_addr_tx_edges([
         AddrTxEdge(input_address="addr1", txid=100, is_synthetic=False),
         AddrTxEdge(input_address="addr2", txid=100, is_synthetic=True),

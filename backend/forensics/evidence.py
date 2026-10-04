@@ -1,6 +1,6 @@
 """Evidence assembly and plain-language summaries for one entity.
 
-Every statement is tagged with its provenance, following ChainTrace's rule
+Every statement is tagged with its provenance, following Kautilya's rule
 that observations, heuristic inferences and model predictions are never
 presented as one another:
 
@@ -246,6 +246,25 @@ def key_transactions(
     ]
 
 
+def seed_proximity(res, eid: int, row) -> dict:
+    """How close this entity is to known-illicit seed wallets (risk propagation)."""
+    n_seeds = int(res.seed.n_seeds) if res.seed is not None else 0
+    hops = int(row["seed_hops"])
+    nearest = int(row["seed_nearest"])
+    return {
+        "n_seeds": n_seeds,
+        "is_seed": bool(row["is_seed"]),
+        "risk": float(row["seed_risk"]),
+        "hops": hops if hops >= 0 else None,
+        "nearest_seed": f"E-{nearest}" if nearest >= 0 and not bool(row["is_seed"]) else None,
+        "boost_points": round(float(row["score"] - row["score_base"]), 2),
+        "note": (
+            "Risk spread from known-illicit seed entities through the money-flow graph. Proximity is a lead, "
+            "not guilt: victims and counterparties of illicit entities are close to seeds too."
+        ),
+    }
+
+
 def build_entity_report(res, eid: int) -> dict:
     """Full evidence package for one entity (used by the API, report and summary)."""
     row = res.scores.loc[eid]
@@ -293,7 +312,10 @@ def build_entity_report(res, eid: int) -> dict:
             "network_obfuscation": float(row["network"]),
             "temporal_burst": float(row["burst"]),
             "active_signals": str(row["active_signals"]).split(","),
+            "seed_proximity": float(row["seed_risk"]),
+            "score_before_seed_boost": float(row["score_base"]),
         },
+        "seed_proximity": seed_proximity(res, int(eid), row),
         "heuristic_evidence": hits,
         "network_evidence": net,
         "model_contributions": contrib,
@@ -327,9 +349,14 @@ def summarize(r: dict) -> str:
     sc, act = r["score"], r["activity"]
     p = sc["illicit_probability"]
     lo, hi = sc["interval90"]
+    where = (
+        "is a known-illicit seed (not ranked as a new lead) with"
+        if sc["rank"] == 0
+        else f"ranks #{sc['rank']} of {sc['of']:,} with"
+    )
     parts = [
-        f"{r['label']} ({r['n_addresses']} address{'es' if r['n_addresses'] != 1 else ''}) ranks "
-        f"#{sc['rank']} of {sc['of']:,} with priority {sc['final']:.0f}/100 ({sc['tier'].upper()}). "
+        f"{r['label']} ({r['n_addresses']} address{'es' if r['n_addresses'] != 1 else ''}) {where} "
+        f"priority {sc['final']:.0f}/100 ({sc['tier'].upper()}). "
         f"Model illicit likelihood {p:.0%} (90% range {lo:.0%}-{hi:.0%})."
     ]
     reasons = []
@@ -358,6 +385,14 @@ def summarize(r: dict) -> str:
     if net.get("rapid_country_changes", 0) >= 2:
         reasons.append(
             f"its origin jumped between countries {net['rapid_country_changes']} times within minutes"
+        )
+    sp = r.get("seed_proximity") or {}
+    if sp.get("is_seed"):
+        reasons.append("it is on the seed watch list of known-illicit wallets")
+    elif sp.get("hops") and sp["hops"] <= 3 and sp.get("nearest_seed"):
+        n = sp["hops"]
+        reasons.append(
+            f"it is {n} hop{'s' if n != 1 else ''} from known-illicit seed {sp['nearest_seed']}"
         )
     if reasons:
         parts.append("Why it was flagged: " + "; ".join(reasons) + ".")

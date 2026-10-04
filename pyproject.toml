@@ -1,5 +1,5 @@
 [project]
-name = "chaintrace"
+name = "kautilya"
 version = "0.1.0"
 description = "Blockchain and network forensics investigation platform"
 requires-python = ">=3.11"

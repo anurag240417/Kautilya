@@ -24,6 +24,7 @@ CSV / JSON / XML  ->  ingest + audit  ->  heuristics  ->  entity resolution  -> 
 | Heuristics | `backend/forensics/heuristics.py` | Vectorised CoinJoin, dust spray, change address, peel chain, rapid-hop layering, consolidation, batch payout. |
 | Entities | `backend/forensics/entities.py` | Common-input ownership plus confident change links -> entity ids. 46 features per entity. |
 | Graph ML | `backend/forensics/graphml.py` | Sparse PPMI-SVD node embeddings, neighbour propagation, peer-group clustering. NumPy/SciPy only. |
+| Seed risk | `backend/forensics/seedrisk.py` | Spreads risk from known-illicit seed wallets (personalised PageRank) and reports hops to the nearest seed. Hubs absorb risk. |
 | Model | `backend/forensics/model.py` | Random Forest (calibrated, with intervals) + Isolation Forest + occlusion explanations. |
 | Pipeline | `backend/forensics/pipeline.py` | Orchestrates, cross-fits, fuses through `synthesize_risk_score`. |
 | Evidence | `backend/forensics/evidence.py` | Per-entity evidence package and plain-language summary. |
@@ -34,7 +35,7 @@ CSV / JSON / XML  ->  ingest + audit  ->  heuristics  ->  entity resolution  -> 
 
 * **Random Forest for the classifier.** Tabular entity features, strong on small/imbalanced data, no tuning fragility,
   per-tree spread gives an uncertainty interval for free, out-of-bag predictions give honest calibration data.
-  (Note: the older Elliptic++ documents say "GBM"; the code in `backend/ml/classifier.py` is a Random Forest.)
+  (`backend/ml/classifier.py`, used for the Elliptic++ transaction model, is also a Random Forest.)
 * **Isotonic calibration on out-of-bag predictions.** "0.8" then means roughly 80% of similar training entities were illicit.
 * **Isolation Forest for anomaly.** Unsupervised, reported as a percentile rank, and capped during fusion when it is the
   only strong signal: novelty is not guilt.
@@ -93,6 +94,27 @@ precision at 85.5% coverage.
 
 **Robustness:** PR-AUC stays above 0.89 with noise at one training standard deviation and 0.93 with half of the
 features missing.
+
+### Seed-based risk propagation
+
+The problem statement asks to "propagate risk scores from seed illicit wallets". Seeds are known-illicit entities (a watch list, or
+leads an analyst has confirmed). Risk is spread through the money-flow graph with personalised PageRank (random walk with restart
+at the seeds), fades with distance, and each alert reports its **hops to the nearest seed**. Exchange-style hubs absorb risk: they
+neither pass it on nor are flagged for it. The fused score gets a *boost* from seed proximity and is never lowered by it.
+
+Test: reveal 5/10/20% of the illicit entities as seeds and score only the **remaining** entities (seeds are excluded):
+
+| Seeds revealed | Seed propagation alone (PR-AUC) | Illicit share within 2 hops (overall) | Illicit found within 2 hops | Fused PR-AUC without / with boost |
+|---|---|---|---|---|
+| 5% (28) | 0.322 | 29.1% (1.6%) | 21.0% | 0.985 / 0.985 |
+| 10% (57) | 0.492 | 27.3% (1.5%) | 36.1% | 0.983 / 0.985 |
+| 20% (115) | 0.637 | 19.8% (1.3%) | 54.8% | 0.985 / 0.991 |
+
+Reading it honestly: entities within two hops of a seed are 15 to 18 times more likely to be illicit than the population, and the
+more seeds an analyst has, the more illicit entities get found (21% to 55%). On top of the fused score the gain is small (0.985 ->
+0.991 at 20% seeds) because the other signals are already strong on this synthetic data. Proximity is a lead, not guilt: victims
+and counterparties of illicit entities are close to seeds as well, which is why the hop count is always shown. In the default
+dashboard the seeds are a simulated watch list of 10% of the illicit entities; with analyst feedback, confirmed leads become seeds.
 
 ### What these numbers do and do not say
 
@@ -164,4 +186,4 @@ All heavy stages are vectorised (pandas/NumPy/SciPy sparse); model training caps
 ## 8. API
 
 See `backend/api/forensics_routes.py` (`/forensics/status|load|alerts|entities/{id}|graph/{id}|feedback|uncertain|retrain|reset-model|report|cases|benchmark`).
-File loading is confined to the data directory (`CHAINTRACE_DATA_DIR`); path traversal is rejected and tested.
+File loading is confined to the data directory (`KAUTILYA_DATA_DIR`); path traversal is rejected and tested.
