@@ -5,7 +5,7 @@ the four native Elliptic++ edgelists rather than reconstructing edges
 from raw records.
 """
 
-from .builder import ChainTraceGraph
+from .builder import KautilyaGraph
 from .features import (
     NodeFeatures,
     compute_betweenness_centrality,
@@ -27,7 +27,7 @@ from .paths import (
 
 __all__ = [
     # Builder
-    "ChainTraceGraph",
+    "KautilyaGraph",
     # Feature extraction
     "NodeFeatures",
     "compute_betweenness_centrality",

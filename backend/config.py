@@ -1,4 +1,4 @@
-"""ChainTrace configuration.
+"""Kautilya configuration.
 
 Reads settings from environment variables with sensible defaults.
 All paths are resolved relative to the project root unless overridden.
@@ -18,18 +18,18 @@ _ELLIPTIC_PP_DATA_SUBDIR = "data csv"
 class Settings:
     """Application settings resolved from environment variables.
 
-    Environment variables use the ``CHAINTRACE_`` prefix.
+    Environment variables use the ``KAUTILYA_`` prefix.
     """
 
     def __init__(self) -> None:
         self.dataset_dir = Path(
-            os.environ.get("CHAINTRACE_DATASET_DIR", str(PROJECT_ROOT / "dataset"))
+            os.environ.get("KAUTILYA_DATASET_DIR", str(PROJECT_ROOT / "dataset"))
         )
         self.elliptic_pp_dir = self.dataset_dir / _ELLIPTIC_PP_SUBDIR / _ELLIPTIC_PP_DATA_SUBDIR
         self.models_dir = Path(
-            os.environ.get("CHAINTRACE_MODELS_DIR", str(PROJECT_ROOT / "backend" / "models"))
+            os.environ.get("KAUTILYA_MODELS_DIR", str(PROJECT_ROOT / "backend" / "models"))
         )
-        self.log_level = os.environ.get("CHAINTRACE_LOG_LEVEL", "INFO")
+        self.log_level = os.environ.get("KAUTILYA_LOG_LEVEL", "INFO")
 
     # --- Elliptic++ file paths ---
 

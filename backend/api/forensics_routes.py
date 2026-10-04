@@ -101,6 +101,7 @@ def handle_alerts(req: Request) -> Response:
             min_score=_float(req, "min_score", 0.0),
             tier=tier,
             search=req.get_query_param("search"),
+            include_seeds=req.get_query_param("include_seeds") in ("1", "true", "yes"),
         )
     )
 
@@ -172,7 +173,7 @@ def handle_report(req: Request) -> Response:
     try:
         html_text = get_forensics_service().report_html(
             ids,
-            (req.get_query_param("title") or "ChainTrace investigation report")[:120],
+            (req.get_query_param("title") or "Kautilya investigation report")[:120],
             (req.get_query_param("analyst") or "")[:80],
             (req.get_query_param("notes") or "")[:1000],
         )
@@ -181,7 +182,7 @@ def handle_report(req: Request) -> Response:
     return Response(
         body=html_text,
         content_type="text/html; charset=utf-8",
-        headers={"Content-Disposition": 'attachment; filename="chaintrace_report.html"'}
+        headers={"Content-Disposition": 'attachment; filename="kautilya_report.html"'}
         if req.get_query_param("download")
         else {},
     )

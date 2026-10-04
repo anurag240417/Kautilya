@@ -17,7 +17,7 @@ def client(tmp_path_factory):
     ds = generate_dataset(SynthConfig(n_tx=4000, seed=9))
     ds.write_csv(d / "sample.csv", limit=800)
     (d.parent / "secret.csv").write_text("x")
-    os.environ["CHAINTRACE_DATA_DIR"] = str(d)
+    os.environ["KAUTILYA_DATA_DIR"] = str(d)
     svc = ForensicsService(CaseStore(":memory:"))
     set_forensics_service(svc)
     c = TestClient(create_app())
@@ -29,7 +29,7 @@ def client(tmp_path_factory):
     )
     yield c
     set_forensics_service(None)
-    os.environ.pop("CHAINTRACE_DATA_DIR", None)
+    os.environ.pop("KAUTILYA_DATA_DIR", None)
 
 
 def test_status(client):

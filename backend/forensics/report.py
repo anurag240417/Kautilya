@@ -22,7 +22,7 @@ from backend.forensics.cases import dataset_fingerprint
 from backend.forensics.evidence import build_entity_report
 from backend.forensics.graphview import entity_subgraph
 
-TOOL_VERSION = "chaintrace-forensics/0.2"
+TOOL_VERSION = "kautilya-forensics/0.2"
 _JSON_RE = re.compile(r'<script type="application/json" id="evidence">(.*?)</script>', re.S)
 
 
@@ -188,7 +188,7 @@ code{font-size:11px;word-break:break-all}.tag{font-size:10px;background:#eaecf0;
 def render_report_html(
     res,
     entity_ids: list[int],
-    title: str = "ChainTrace investigation report",
+    title: str = "Kautilya investigation report",
     analyst: str = "",
     notes: str = "",
 ) -> str:

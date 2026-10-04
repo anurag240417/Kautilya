@@ -1,6 +1,6 @@
 """Network observation domain model.
 
-The network layer is 100% synthetic. ChainTrace does not have a
+The network layer is 100% synthetic. Kautilya does not have a
 real-world historical source for transaction-to-IP observations.
 Every network observation record carries ``is_synthetic=True``.
 

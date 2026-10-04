@@ -21,7 +21,7 @@ from backend.domain.risk import EvidenceLedger, RiskScore
 from backend.domain.transaction import Transaction
 from backend.domain.types import AlertStatus, EntityClass, PriorityTier
 from backend.domain.wallet import StatsSummary, Wallet
-from backend.graph.builder import ChainTraceGraph
+from backend.graph.builder import KautilyaGraph
 from backend.graph.paths import find_shortest_path, get_ego_graph
 from backend.api.demo_data import build_demo_dataset
 from backend.risk.aggregation import AggregationMethod, aggregate_transaction_scores
@@ -33,14 +33,14 @@ class InvestigationService:
 
     def __init__(
         self,
-        graph: ChainTraceGraph | None = None,
+        graph: KautilyaGraph | None = None,
         transactions: dict[int, Transaction] | None = None,
         wallets: dict[str, Wallet] | None = None,
         risk_scores: dict[str, RiskScore] | None = None,
         alerts: dict[str, InvestigativeAlert] | None = None,
         correlations: dict[int, list[dict[str, Any]]] | None = None,
     ) -> None:
-        self.graph = graph or ChainTraceGraph()
+        self.graph = graph or KautilyaGraph()
         self.transactions: dict[int, Transaction] = transactions or {}
         self.wallets: dict[str, Wallet] = wallets or {}
         self.risk_scores: dict[str, RiskScore] = risk_scores or {}
@@ -437,7 +437,7 @@ class InvestigationService:
         self.risk_scores.clear()
         self.correlations.clear()
         self.alerts.clear()
-        self.graph = ChainTraceGraph()
+        self.graph = KautilyaGraph()
 
         self.transactions.update(demo.transactions)
         self.wallets.update(demo.wallets)
@@ -460,7 +460,7 @@ class InvestigationService:
         self.risk_scores.clear()
         self.correlations.clear()
         self.alerts.clear()
-        self.graph = ChainTraceGraph()
+        self.graph = KautilyaGraph()
 
         self.transactions.update(exp.transactions)
         self.wallets.update(exp.wallets)

@@ -1,4 +1,4 @@
-"""Unit and integration tests for ChainTrace Investigation API.
+"""Unit and integration tests for Kautilya Investigation API.
 
 Tests all endpoints:
 - GET /health
@@ -26,14 +26,14 @@ from backend.domain.risk import EvidenceLedger, RiskScore
 from backend.domain.transaction import Transaction
 from backend.domain.types import EntityClass, PriorityTier
 from backend.domain.wallet import StatsSummary, Wallet
-from backend.graph.builder import ChainTraceGraph
+from backend.graph.builder import KautilyaGraph
 from backend.risk.ranking import generate_alert
 
 
 @pytest.fixture(autouse=True)
 def setup_api_service():
     """Build a clean, deterministic InvestigationService fixture for tests."""
-    graph = ChainTraceGraph()
+    graph = KautilyaGraph()
 
     # 1. Transactions
     tx1 = Transaction(
@@ -582,17 +582,17 @@ class TestStaticFrontendServing:
     def test_serves_index_html_for_root(self, client):
         resp = client.get("/")
         if resp.status_code == 200:
-            assert "ChainTrace" in resp.text
+            assert "Kautilya" in resp.text
             assert "text/html" in resp.headers.get("Content-Type", "")
 
     def test_custom_static_dir(self, tmp_path):
         html_file = tmp_path / "index.html"
-        html_file.write_text("<!DOCTYPE html><html><body>ChainTrace Offline Test</body></html>")
-        from backend.api.app import ChainTraceAPI
-        app = ChainTraceAPI(title="Test", static_dir=tmp_path)
+        html_file.write_text("<!DOCTYPE html><html><body>Kautilya Offline Test</body></html>")
+        from backend.api.app import KautilyaAPI
+        app = KautilyaAPI(title="Test", static_dir=tmp_path)
         test_client = TestClient(app)
         resp = test_client.get("/")
         assert resp.status_code == 200
-        assert "ChainTrace Offline Test" in resp.text
+        assert "Kautilya Offline Test" in resp.text
 
 

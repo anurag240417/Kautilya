@@ -1,5 +1,5 @@
 /**
- * Forensic data formatters for ChainTrace.
+ * Forensic data formatters for Kautilya.
  */
 
 export function truncateIdentifier(id, startLen = 8, endLen = 6) {

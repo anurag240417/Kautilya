@@ -1,4 +1,4 @@
-"""End-to-End Pipeline Verification Suite for ChainTrace.
+"""End-to-End Pipeline Verification Suite for Kautilya.
 
 Verifies the complete analytical dataflow:
     Raw Data / Synthetics
@@ -31,7 +31,7 @@ from backend.domain.risk import EvidenceCategory, SignalInput
 from backend.domain.transaction import Transaction
 from backend.domain.types import EntityClass, PriorityTier, ScriptType
 from backend.domain.wallet import StatsSummary, Wallet
-from backend.graph.builder import ChainTraceGraph
+from backend.graph.builder import KautilyaGraph
 from backend.graph.paths import find_shortest_path, get_ego_graph
 from backend.ml import AnomalyDetector, TransactionClassifier
 from backend.normalization import (
@@ -75,7 +75,7 @@ def guard_external_network_calls(monkeypatch):
 
 
 class TestCompleteEndToEndPipeline:
-    """Validate every stage of the ChainTrace forensic pipeline in sequence."""
+    """Validate every stage of the Kautilya forensic pipeline in sequence."""
 
     def test_stage1_normalization_and_provenance(self):
         """Stage 1: Normalization enforces schema types and preserves is_synthetic."""
@@ -120,7 +120,7 @@ class TestCompleteEndToEndPipeline:
 
     def test_stage2_graph_construction_and_topology(self):
         """Stage 2: Graph builder populates topology and executes graph queries."""
-        graph = ChainTraceGraph()
+        graph = KautilyaGraph()
 
         # Add edges
         graph.add_addr_tx_edges([
@@ -285,4 +285,4 @@ class TestCompleteEndToEndPipeline:
         resp_static = client.get("/")
         assert resp_static.status_code in (200, 404)
         if resp_static.status_code == 200:
-            assert "ChainTrace" in resp_static.text
+            assert "Kautilya" in resp_static.text

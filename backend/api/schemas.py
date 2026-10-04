@@ -1,4 +1,4 @@
-"""Pydantic request and response schemas for ChainTrace Investigation API.
+"""Pydantic request and response schemas for Kautilya Investigation API.
 
 Defines the contract between the backend investigation services and
 API consumers (frontend or automated clients).
@@ -187,7 +187,7 @@ class HealthResponse(BaseModel):
     """API health status response."""
 
     status: str = Field(default="healthy", description="System operational status")
-    version: str = Field(default="0.1.0", description="ChainTrace version")
+    version: str = Field(default="0.1.0", description="Kautilya version")
     dataset_loaded: bool = Field(default=False, description="True if dataset is loaded")
 
 

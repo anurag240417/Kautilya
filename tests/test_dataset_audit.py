@@ -17,10 +17,22 @@ settings = get_settings()
 # Expected file paths
 DATASET_DIR = settings.elliptic_pp_dir
 
-# Skip all tests if dataset directory doesn't exist
+# Skip all tests unless the complete Elliptic++ dataset is present. A partial copy (for example only
+# the three transaction files, enough for the model benchmark) must not turn into failures.
+_REQUIRED_FILES = (
+    "txs_features.csv",
+    "txs_classes.csv",
+    "txs_edgelist.csv",
+    "wallets_features.csv",
+    "wallets_classes.csv",
+    "AddrAddr_edgelist.csv",
+    "AddrTx_edgelist.csv",
+    "TxAddr_edgelist.csv",
+)
+_MISSING = [f for f in _REQUIRED_FILES if not (DATASET_DIR / f).exists()]
 pytestmark = pytest.mark.skipif(
-    not DATASET_DIR.exists(),
-    reason=f"Elliptic++ dataset not found at {DATASET_DIR}",
+    bool(_MISSING),
+    reason=f"Elliptic++ dataset incomplete at {DATASET_DIR} (missing: {', '.join(_MISSING) or 'none'})",
 )
 
 # --- Expected schemas ---

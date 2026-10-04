@@ -1,6 +1,6 @@
-# ChainTrace — Failure Cases & Graceful Degradation
+# Kautilya — Failure Cases & Graceful Degradation
 
-This document describes how ChainTrace handles error conditions, edge cases, and degraded states. All failure modes have been tested and produce clear, informative error responses.
+This document describes how Kautilya handles error conditions, edge cases, and degraded states. All failure modes have been tested and produce clear, informative error responses.
 
 ---
 

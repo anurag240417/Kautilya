@@ -69,7 +69,7 @@ export default function NetworkTelemetryBar() {
     }
 
     window.dispatchEvent(
-      new CustomEvent('chaintrace-simulation-update', {
+      new CustomEvent('kautilya-simulation-update', {
         detail: res,
       })
     );
@@ -117,7 +117,7 @@ export default function NetworkTelemetryBar() {
         timestamp: new Date().toLocaleTimeString(),
       });
       window.dispatchEvent(
-        new CustomEvent('chaintrace-simulation-update', {
+        new CustomEvent('kautilya-simulation-update', {
           detail: { mode, status: res },
         })
       );

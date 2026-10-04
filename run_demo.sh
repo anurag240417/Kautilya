@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ChainTrace Demo Runner
+# Kautilya Demo Runner
 # Single command to build frontend and start the investigation server.
 #
 # Usage:
@@ -10,11 +10,11 @@ set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 FRONTEND_DIR="${PROJECT_ROOT}/frontend"
-BACKEND_HOST="${CHAINTRACE_HOST:-127.0.0.1}"
-BACKEND_PORT="${CHAINTRACE_PORT:-8000}"
+BACKEND_HOST="${KAUTILYA_HOST:-127.0.0.1}"
+BACKEND_PORT="${KAUTILYA_PORT:-8000}"
 
 echo "═══════════════════════════════════════════════════════════════"
-echo "  ChainTrace — Investigation Platform Demo"
+echo "  Kautilya — Investigation Platform Demo"
 echo "═══════════════════════════════════════════════════════════════"
 echo ""
 
@@ -54,7 +54,7 @@ else
 fi
 
 echo ""
-echo "▸ Starting ChainTrace Investigation API..."
+echo "▸ Starting Kautilya Investigation API..."
 echo "  Host: ${BACKEND_HOST}"
 echo "  Port: ${BACKEND_PORT}"
 echo "  UI:   http://${BACKEND_HOST}:${BACKEND_PORT}/"

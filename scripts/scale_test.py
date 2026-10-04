@@ -87,7 +87,7 @@ def main() -> None:
     mem = peak_memory_mb()
 
     lines = [
-        "# ChainTrace Scale Test",
+        "# Kautilya Scale Test",
         "",
         f"- Machine: {platform.platform()}, Python {platform.python_version()}",
         f"- Transactions: {s['transactions']:,}; addresses: {s['addresses']:,}; network observations: {s['observations']:,}",

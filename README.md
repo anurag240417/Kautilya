@@ -198,4 +198,3 @@ python scripts/verify_offline.py
 ## License & Forensic Ethics
 
 Kautilya is developed strictly as an investigative decision-support tool. It presents probabilistic rankings, anomalies, and structural indicators with explicit uncertainty metrics. It does not replace judicial oversight or legal due process.
-#

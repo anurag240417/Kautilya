@@ -1,5 +1,5 @@
 /**
- * ChainTrace API client module.
+ * Kautilya API client module.
  * Fully offline-compliant; wraps browser fetch() against local WSGI API.
  */
 
@@ -124,7 +124,7 @@ export const forensics = {
   status: () => request('/forensics/status'),
   load: (body) => request('/forensics/load', { method: 'POST', body }),
   files: () => request('/forensics/files'),
-  alerts: (params = {}) => {
+  alerts: (params = {}) => {  // params may include include_seeds=1 to list known seeds too
     const q = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== null && v !== '') q.append(k, String(v));

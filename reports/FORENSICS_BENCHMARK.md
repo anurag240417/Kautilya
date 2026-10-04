@@ -1,4 +1,4 @@
-# ChainTrace Forensics Benchmark (entity level, synthetic ground truth)
+# Kautilya Forensics Benchmark (entity level, synthetic ground truth)
 
 - Dataset: synthetic, seed 11
 - Transactions: 58,193
@@ -28,6 +28,16 @@
 | RF_behavioural_only | 0.964 | [0.947, 0.978] | 0.988 | 1.000 | 0.980 | 0.990 |
 | RF_full (ours, model only) | 0.993 | [0.987, 0.998] | 1.000 | 1.000 | 1.000 | 1.000 |
 | FUSED (ours) | 0.984 | [0.975, 0.992] | 0.998 | 1.000 | 1.000 | 1.000 |
+
+## 2b. Seed-based risk propagation (known-illicit seeds)
+
+A fraction of illicit entities is revealed as seeds; risk is spread from them (personalised PageRank, exchange-style hubs absorb). Everything below is scored on the remaining, non-seed entities.
+
+| Seeds revealed | Seeds | Seed propagation only (PR-AUC) | Fused, no seeds | Fused + seed boost | Illicit share within 2 hops (overall) | Illicit found within 2 hops |
+|---|---|---|---|---|---|---|
+| 5% | 28 | 0.322 | 0.985 | 0.985 | 0.291 (0.016) | 0.210 |
+| 10% | 57 | 0.492 | 0.983 | 0.985 | 0.273 (0.015) | 0.361 |
+| 20% | 115 | 0.637 | 0.985 | 0.991 | 0.198 (0.013) | 0.548 |
 
 ## 3. Unseen scenarios (leave-one-scenario-out)
 

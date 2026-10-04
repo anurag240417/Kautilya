@@ -1,4 +1,4 @@
-"""Expanded realistic Bitcoin dataset for ChainTrace.
+"""Expanded realistic Bitcoin dataset for Kautilya.
 
 Provides 110 transactions, 50 wallets, 40+ alerts, and 250+ graph edges,
 simulating active mempool and block activity across 5 forensic clusters:

@@ -10,7 +10,7 @@ frontend/dist
 dataset
 data
 output
-.chaintrace
+.kautilya
 *.db
-chaintrace.egg-info
+kautilya.egg-info
 generated_network_data

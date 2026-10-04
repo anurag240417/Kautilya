@@ -1,4 +1,4 @@
-"""ChainTrace WSGI API router and application.
+"""Kautilya WSGI API router and application.
 
 Implements a clean, zero-dependency REST API engine using Python standard
 library WSGI and Pydantic v2 validation.
@@ -104,12 +104,12 @@ class Route:
         return None
 
 
-class ChainTraceAPI:
-    """WSGI-compliant micro-application for ChainTrace Investigation API."""
+class KautilyaAPI:
+    """WSGI-compliant micro-application for Kautilya Investigation API."""
 
     def __init__(
         self,
-        title: str = "ChainTrace API",
+        title: str = "Kautilya API",
         static_dir: Path | str | None = None,
     ) -> None:
         self.title = title
@@ -385,7 +385,7 @@ class TestClient:
 
     __test__ = False
 
-    def __init__(self, app: ChainTraceAPI) -> None:
+    def __init__(self, app: KautilyaAPI) -> None:
         self.app = app
 
     def request(

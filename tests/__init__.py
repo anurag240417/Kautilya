@@ -1,1 +1,1 @@
-"""ChainTrace test suite."""
+"""Kautilya test suite."""

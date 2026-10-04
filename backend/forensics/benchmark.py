@@ -28,6 +28,7 @@ from sklearn.preprocessing import StandardScaler
 
 from backend.forensics.dataset import RawDataset
 from backend.forensics.graphml import EMB_PREFIX, PROP_COLUMNS
+from backend.forensics.seedrisk import propagate_seed_risk, seed_boost
 from backend.forensics.pipeline import (
     ForensicsConfig,
     Prepared,
@@ -229,6 +230,37 @@ def run_forensic_benchmark(
         k: _metrics(y[ev], np.nan_to_num(v[ev]), n_boot, cfg.seed) for k, v in baselines.items()
     }
 
+    # ---------------- 2b. seed-based risk propagation ---------------------
+    # Reveal a fraction of the illicit entities as known seeds, spread risk from them, and score
+    # the *remaining* entities. Seeds are excluded from every number reported here.
+    absorbing = (
+        ((F["in_degree"] >= 30) & (F["out_degree"] >= 8)) | (F["n_addresses"] >= 50)
+    ).to_numpy()
+    positives = np.flatnonzero(ev & (y == 1))
+    seed_rows: dict = {}
+    for frac in (0.05, 0.10, 0.20):
+        rng_s = np.random.default_rng(cfg.seed + int(frac * 1000))
+        picked = rng_s.choice(positives, max(2, int(len(positives) * frac)), replace=False)
+        sr = propagate_seed_risk(
+            prep.graph.adjacency, picked, absorbing=absorbing, max_hops=cfg.seed_max_hops
+        )
+        keep = ev & ~sr.is_seed
+        yk = y[keep].astype(int)
+        boosted = seed_boost(fused_s, sr.risk, cfg.seed_boost_weight)
+        near = (sr.hops[keep] >= 1) & (sr.hops[keep] <= 2)
+        seed_rows[f"{int(frac * 100)}%"] = {
+            "n_seeds": int(sr.n_seeds),
+            "seed_propagation_only": _metrics(yk, sr.risk[keep], n_boot, cfg.seed),
+            "fused_without_seeds": _metrics(yk, fused_s[keep], n_boot, cfg.seed),
+            "fused_with_seed_boost": _metrics(yk, boosted[keep], n_boot, cfg.seed),
+            "illicit_share_within_2_hops": float(yk[near].mean()) if near.any() else None,
+            "illicit_share_overall": float(yk.mean()),
+            "illicit_found_within_2_hops": float(near[yk == 1].mean())
+            if (yk == 1).any()
+            else None,
+        }
+    out["seed_propagation"] = seed_rows
+
     # ---------------- 3. leave-one-scenario-out --------------------------
     loso: dict = {}
     normal_test = np.random.default_rng(cfg.seed + 5).random(len(y)) < 0.3
@@ -309,7 +341,7 @@ def _f(v, d=3):
 
 def render_markdown(r: dict, meta: dict | None = None) -> str:
     meta = meta or {}
-    L = ["# ChainTrace Forensics Benchmark (entity level, synthetic ground truth)", ""]
+    L = ["# Kautilya Forensics Benchmark (entity level, synthetic ground truth)", ""]
     if meta:
         L += [
             f"- Dataset: {meta.get('dataset', '')}",
@@ -341,6 +373,25 @@ def render_markdown(r: dict, meta: dict | None = None) -> str:
         L.append(
             f"| {k} | {_f(m['pr_auc'])} | {_ci(m)} | {_f(m['roc_auc'])} | {_f(m.get('precision@10'))} | {_f(m.get('precision@50'))} | {_f(m.get('precision@100'))} |"
         )
+    if r.get("seed_propagation"):
+        L += [
+            "",
+            "## 2b. Seed-based risk propagation (known-illicit seeds)",
+            "",
+            "A fraction of illicit entities is revealed as seeds; risk is spread from them (personalised PageRank, "
+            "exchange-style hubs absorb). Everything below is scored on the remaining, non-seed entities.",
+            "",
+            "| Seeds revealed | Seeds | Seed propagation only (PR-AUC) | Fused, no seeds | Fused + seed boost | "
+            "Illicit share within 2 hops (overall) | Illicit found within 2 hops |",
+            "|---|---|---|---|---|---|---|",
+        ]
+        for frac, row in r["seed_propagation"].items():
+            L.append(
+                f"| {frac} | {row['n_seeds']} | {_f(row['seed_propagation_only']['pr_auc'])} | "
+                f"{_f(row['fused_without_seeds']['pr_auc'])} | {_f(row['fused_with_seed_boost']['pr_auc'])} | "
+                f"{_f(row['illicit_share_within_2_hops'])} ({_f(row['illicit_share_overall'])}) | "
+                f"{_f(row['illicit_found_within_2_hops'])} |"
+            )
     L += [
         "",
         "## 3. Unseen scenarios (leave-one-scenario-out)",

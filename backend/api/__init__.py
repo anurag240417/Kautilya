@@ -8,7 +8,7 @@ from backend.api.alerts import (
     handle_get_alerts,
     handle_patch_alert,
 )
-from backend.api.app import ChainTraceAPI, Request, Response, TestClient
+from backend.api.app import KautilyaAPI, Request, Response, TestClient
 from backend.api.graph import handle_get_graph, handle_get_graph_path
 from backend.api.schemas import (
     AlertListResponse,
@@ -38,9 +38,9 @@ from backend.api.transactions import handle_get_transaction
 from backend.api.wallets import handle_get_wallet
 
 
-def create_app() -> ChainTraceAPI:
-    """Factory function to build and configure the ChainTrace API application."""
-    app = ChainTraceAPI(title="ChainTrace Investigation API")
+def create_app() -> KautilyaAPI:
+    """Factory function to build and configure the Kautilya API application."""
+    app = KautilyaAPI(title="Kautilya Investigation API")
 
     # Health check
     @app.get("/health")
@@ -84,7 +84,7 @@ def create_app() -> ChainTraceAPI:
 
 __all__ = [
     # Application & Client
-    "ChainTraceAPI",
+    "KautilyaAPI",
     "create_app",
     "TestClient",
     "Request",

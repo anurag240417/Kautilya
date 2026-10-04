@@ -1,7 +1,7 @@
 """Demonstration dataset for SIH live demo — Operation Shadow Mixer.
 
 Constructs a coherent money-laundering investigation scenario that exercises
-every ChainTrace signal category:
+every Kautilya signal category:
 
     ML Behavioral → classifier predictions on illicit source transactions
     Anomaly       → statistical deviance on mixer fan-out and rapid churn

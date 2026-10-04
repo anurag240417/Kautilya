@@ -26,7 +26,7 @@ export default function DataSources() {
       >
         <h2 style={{ fontSize: '15px', marginBottom: '6px' }}>Strict Provenance Boundary</h2>
         <p style={{ fontSize: '13px', color: 'var(--ct-text-secondary)', lineHeight: '1.5' }}>
-          ChainTrace maintains an unbreakable boundary between real and synthetic data.
+          Kautilya maintains an unbreakable boundary between real and synthetic data.
           Every synthetic record carries an explicit <code style={{ color: '#9D8BC9' }}>is_synthetic = True</code> flag
           at the domain data-model level. This flag survives ingestion, normalization, graph construction, ML inference,
           risk scoring, REST API responses, and is visibly marked across the entire user interface.
@@ -101,7 +101,7 @@ export default function DataSources() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13px', color: 'var(--ct-text-secondary)' }}>
             <div>
-              <strong style={{ color: 'var(--ct-text-primary)' }}>Source:</strong> Local ChainTrace Network Generator (Phase 4).
+              <strong style={{ color: 'var(--ct-text-primary)' }}>Source:</strong> Local Kautilya Network Generator (Phase 4).
             </div>
 
             <div>
@@ -127,7 +127,7 @@ export default function DataSources() {
       <div className="ct-card">
         <h2 style={{ fontSize: '15px', marginBottom: '12px' }}>Visual Marker Compliance (§6)</h2>
         <div style={{ fontSize: '13px', color: 'var(--ct-text-secondary)', lineHeight: '1.5', marginBottom: '16px' }}>
-          Every element in ChainTrace visually indicates whether it derives from the real blockchain layer or the synthetic network simulation:
+          Every element in Kautilya visually indicates whether it derives from the real blockchain layer or the synthetic network simulation:
         </div>
 
         <table>
@@ -178,7 +178,7 @@ export default function DataSources() {
       <div className="ct-card" style={{ backgroundColor: 'var(--ct-bg-elevated)' }}>
         <h2 style={{ fontSize: '15px', marginBottom: '6px' }}>Sovereign Offline Architecture</h2>
         <p style={{ fontSize: '13px', color: 'var(--ct-text-secondary)', lineHeight: '1.5' }}>
-          ChainTrace is engineered for restricted public-sector forensic labs and air-gapped sovereign environments.
+          Kautilya is engineered for restricted public-sector forensic labs and air-gapped sovereign environments.
           All fonts, graph rendering scripts, machine learning weights, and IP databases are bundled locally.
           At runtime, the software initiates <strong>zero outbound network requests</strong>.
         </p>

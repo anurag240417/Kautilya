@@ -11,7 +11,7 @@ import logging
 
 import pandas as pd
 
-from backend.graph.builder import ChainTraceGraph
+from backend.graph.builder import KautilyaGraph
 from backend.graph.features import (
     compute_betweenness_centrality,
     compute_clustering_coefficients,
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 def extract_graph_feature_df(
-    graph: ChainTraceGraph,
+    graph: KautilyaGraph,
     transaction_ids: list | None = None,
     betweenness_k: int | None = None,
 ) -> pd.DataFrame:
@@ -37,7 +37,7 @@ def extract_graph_feature_df(
     transaction node in the graph.
 
     Args:
-        graph: The ChainTrace investigation graph.
+        graph: The Kautilya investigation graph.
         transaction_ids: Optional list of transaction IDs to extract
             features for. If None, extracts for all transaction nodes.
         betweenness_k: Number of source nodes to sample for approximate

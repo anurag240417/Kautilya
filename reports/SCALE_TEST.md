@@ -1,4 +1,4 @@
-# ChainTrace Scale Test
+# Kautilya Scale Test
 
 - Machine: Windows-11-10.0.26200-SP0, Python 3.14.2
 - Transactions: 509,504; addresses: 1,637,091; network observations: 1,019,231

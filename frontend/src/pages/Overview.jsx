@@ -57,8 +57,8 @@ export default function Overview() {
     const handleSimUpdate = () => {
       loadOverviewData();
     };
-    window.addEventListener('chaintrace-simulation-update', handleSimUpdate);
-    return () => window.removeEventListener('chaintrace-simulation-update', handleSimUpdate);
+    window.addEventListener('kautilya-simulation-update', handleSimUpdate);
+    return () => window.removeEventListener('kautilya-simulation-update', handleSimUpdate);
   }, []);
 
   const handleSearch = (entityId, entityType) => {
@@ -199,7 +199,7 @@ export default function Overview() {
             Fully Offline Execution
           </div>
           <div style={{ fontSize: '12px', color: 'var(--ct-text-secondary)', lineHeight: '1.4' }}>
-            ChainTrace operates with zero external network dependencies. All GeoIP resolution, graph traversal, and ML scoring occur entirely in-memory and on local disk.
+            Kautilya operates with zero external network dependencies. All GeoIP resolution, graph traversal, and ML scoring occur entirely in-memory and on local disk.
           </div>
         </div>
       </div>

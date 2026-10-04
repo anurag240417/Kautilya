@@ -1,12 +1,12 @@
 # Real GeoIP, Tor and VPN data (offline setup)
 
-ChainTrace never calls the network at runtime. To use real open IP data, download it **once on a connected machine**,
-copy the files over, and point ChainTrace at them. Without them a coarse built-in first-octet table is used
+Kautilya never calls the network at runtime. To use real open IP data, download it **once on a connected machine**,
+copy the files over, and point Kautilya at them. Without them a coarse built-in first-octet table is used
 (fine for the synthetic demo, not for real investigations).
 
 ## Files
 
-Place in `backend/reference/geoip/` (or any directory named by `CHAINTRACE_GEOIP_DIR`):
+Place in `backend/reference/geoip/` (or any directory named by `KAUTILYA_GEOIP_DIR`):
 
 | File | Source | Format |
 |---|---|---|

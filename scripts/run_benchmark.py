@@ -1,6 +1,6 @@
 """Run the detector benchmark and write reports/benchmark_results.json + BENCHMARK.md.
 
-Real run (needs Elliptic++ under CHAINTRACE_DATASET_DIR):
+Real run (needs Elliptic++ under KAUTILYA_DATASET_DIR):
 
     python -m scripts.run_benchmark
 

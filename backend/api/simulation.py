@@ -23,7 +23,7 @@ from backend.domain.graph import AddrAddrEdge, AddrTxEdge, TxAddrEdge, TxTxEdge
 from backend.domain.risk import RiskScore
 from backend.domain.transaction import Transaction
 from backend.domain.wallet import Wallet
-from backend.graph.builder import ChainTraceGraph
+from backend.graph.builder import KautilyaGraph
 
 # Bitcoin node telemetry constants for professional UI display
 BLOCK_HEIGHT = 854230
@@ -69,7 +69,7 @@ class SimulationEngine:
             return {
                 "title": "TX 1001: Darknet Market Influx (14.5 BTC)",
                 "headline": "14.50 BTC transferred from darknet vendor to mixing service hub.",
-                "narrative": "Supervised GBM classifier evaluated: 94.2% illicit probability. CRITICAL alert generated.",
+                "narrative": "Supervised Random Forest classifier evaluated: 94.2% illicit probability. CRITICAL alert generated.",
             }
         elif txid == TX_1002:
             return {
@@ -196,7 +196,7 @@ class SimulationEngine:
         service.risk_scores.clear()
         service.correlations.clear()
         service.alerts.clear()
-        service.graph = ChainTraceGraph()
+        service.graph = KautilyaGraph()
 
         if mode == "full":
             # Apply all 110 transactions

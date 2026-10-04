@@ -1,4 +1,4 @@
-"""ChainTrace domain models.
+"""Kautilya domain models.
 
 Canonical data schemas used across all pipeline modules.
 All models use Pydantic v2 for validation and serialization.

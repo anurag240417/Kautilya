@@ -3,7 +3,7 @@
 All data is local.  Three lookup tiers, best first:
 
 1. **Real open databases** dropped into ``backend/reference/geoip/`` (or the
-   directory named by ``CHAINTRACE_GEOIP_DIR``):
+   directory named by ``KAUTILYA_GEOIP_DIR``):
 
    * ``dbip-country-lite.csv``  - DB-IP "IP to Country Lite" (CC-BY 4.0):
      rows of ``start_ip,end_ip,country``
@@ -37,7 +37,7 @@ REFERENCE_DIR = Path(__file__).resolve().parent.parent / "reference"
 
 
 def geoip_dir() -> Path:
-    return Path(os.environ.get("CHAINTRACE_GEOIP_DIR", str(REFERENCE_DIR / "geoip")))
+    return Path(os.environ.get("KAUTILYA_GEOIP_DIR", str(REFERENCE_DIR / "geoip")))
 
 
 # ======================================================================

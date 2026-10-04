@@ -1,4 +1,4 @@
-"""Verify zero runtime network dependency for ChainTrace.
+"""Verify zero runtime network dependency for Kautilya.
 
 Scans the codebase for:
 1. Imports of network-calling libraries (requests, urllib.request, httpx, etc.)
@@ -229,7 +229,7 @@ def check_runtime_socket_usage() -> list[str]:
 def run_verification() -> bool:
     """Execute all offline compliance checks. Returns True if all pass."""
     print("=" * 70)
-    print("ChainTrace Offline Compliance Verification")
+    print("Kautilya Offline Compliance Verification")
     print("=" * 70)
     print()
 

@@ -29,7 +29,7 @@ VERDICT_LABEL = {"confirmed": 1.0, "false_positive": 0.0}
 
 
 def default_db_path() -> Path:
-    return Path(os.environ.get("CHAINTRACE_CASE_DB", str(Path.cwd() / ".chaintrace" / "cases.db")))
+    return Path(os.environ.get("KAUTILYA_CASE_DB", str(Path.cwd() / ".kautilya" / "cases.db")))
 
 
 def dataset_fingerprint(ds: RawDataset) -> str:

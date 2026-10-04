@@ -21,7 +21,7 @@ import pandas as pd
 
 from backend.config import configure_logging, get_settings
 from backend.domain.graph import TxTxEdge
-from backend.graph.builder import ChainTraceGraph
+from backend.graph.builder import KautilyaGraph
 from backend.ml.anomaly import AnomalyDetector
 from backend.ml.classifier import TransactionClassifier
 from backend.ml.dataset import load_transaction_dataset, prepare_ml_splits
@@ -137,7 +137,7 @@ def main() -> None:
     models_dir.mkdir(parents=True, exist_ok=True)
 
     print("=" * 70)
-    print("       ChainTrace Machine Learning Model Training Pipeline")
+    print("       Kautilya Machine Learning Model Training Pipeline")
     print("=" * 70)
 
     # ------------------------------------------------------------------
@@ -221,7 +221,7 @@ def main() -> None:
     edgelist_df = pd.read_csv(settings.txs_edgelist_path)
     logger.info("Loaded %d transaction edges from %s", len(edgelist_df), settings.txs_edgelist_path.name)
 
-    graph = ChainTraceGraph()
+    graph = KautilyaGraph()
     tx_edges = (
         TxTxEdge(source_txid=row[0], target_txid=row[1])
         for row in edgelist_df[["txId1", "txId2"]].itertuples(index=False)

@@ -1,4 +1,4 @@
-# ChainTrace — Anticipated Judge Questions & Answers
+# Kautilya — Anticipated Judge Questions & Answers
 
 Prepared Q&A for the Smart India Hackathon (SIH) panel covering architecture, ML, data handling, security, and scalability.
 
@@ -39,13 +39,13 @@ The module boundaries are clean enough that extraction into services is straight
 
 ## ML Model & Predictions
 
-### Q: Why GBM (Gradient Boosted Machines) for classification?
+### Q: Why a Random Forest for classification?
 
-**A**: GBM was chosen because:
+**A**: A Random Forest was chosen because:
 1. **Tabular data performance**: Consistently outperforms deep learning on structured/tabular datasets (Grinsztajn et al., 2022)
-2. **Interpretability**: Tree-based models support feature importance and SHAP explanations natively
+2. **Interpretability**: Tree-based models support feature importance natively, and the spread across trees gives an uncertainty range
 3. **Training speed**: Trains in seconds on Elliptic++ (~200K transactions), enabling rapid iteration
-4. **Class imbalance**: Handles imbalanced classes (illicit is ~2%) well with appropriate sampling strategies
+4. **Class imbalance**: Handles imbalanced classes (illicit is ~2%) with balanced class weights
 5. **Offline inference**: No GPU required, sub-millisecond per prediction
 
 ### Q: Why Isolation Forest for anomaly detection?
@@ -112,7 +112,7 @@ Each category is architecturally separate — an anomaly explanation is NEVER pr
 
 **A**: Partially:
 - **Blockchain layer**: Uses the **Elliptic++ dataset**, a real/public Bitcoin transaction and address dataset. Transaction IDs are anonymized numeric identifiers (not raw on-chain TXIDs).
-- **Network layer**: 100% **synthetic** — ChainTrace does not have real transaction-to-IP observations. Every synthetic record carries `is_synthetic=True` at the data-model level.
+- **Network layer**: 100% **synthetic** — Kautilya does not have real transaction-to-IP observations. Every synthetic record carries `is_synthetic=True` at the data-model level.
 - The demo scenario ("Operation Shadow Mixer") uses synthetic data explicitly marked as such.
 
 ### Q: How do you handle synthetic data transparency?
@@ -128,7 +128,7 @@ Each category is architecturally separate — an anomaly explanation is NEVER pr
 
 ### Q: What is GeoIP and how do you handle it offline?
 
-**A**: GeoIP resolution maps IP addresses to countries/ASNs. We use a **local/bundled database file** (MaxMind GeoLite2 format) — no network calls. This is mandated by our architecture: "ChainTrace MUST run fully offline."
+**A**: GeoIP resolution maps IP addresses to countries/ASNs. We use a **local/bundled database file** (MaxMind GeoLite2 format) — no network calls. This is mandated by our architecture: "Kautilya MUST run fully offline."
 
 ---
 
@@ -145,7 +145,7 @@ Each category is architecturally separate — an anomaly explanation is NEVER pr
 
 ### Q: Is this system admissible as legal evidence?
 
-**A**: ChainTrace is explicitly an **investigative decision-support system**, not a legal evidence tool:
+**A**: Kautilya is explicitly an **investigative decision-support system**, not a legal evidence tool:
 - Risk scores represent **investigative triage priority**, NOT probability of criminality
 - The system NEVER claims that an IP, wallet, or person is definitively responsible for criminal activity
 - All outputs include forensic disclaimers
@@ -169,7 +169,7 @@ Each category is architecturally separate — an anomaly explanation is NEVER pr
 **A**: Minimal:
 - **Python 3.11+** with standard library
 - **Pydantic**: Data validation
-- **scikit-learn**: ML models (GBM, Isolation Forest)
+- **scikit-learn**: ML models (Random Forest, Isolation Forest)
 - **NetworkX**: Graph operations
 - **Node.js** (build-time only): Frontend build
 - No database server, no message queue, no cloud services

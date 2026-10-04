@@ -1,4 +1,4 @@
-"""CLI tool for manually testing and inspecting trained ChainTrace ML models.
+"""CLI tool for manually testing and inspecting trained Kautilya ML models.
 
 Usage:
     # Test a specific transaction by ID:
@@ -60,7 +60,7 @@ def print_prediction_card(result, ground_truth=None, actual_features=None, anoma
 
 
 def main():
-    parser = argparse.ArgumentParser(description="ChainTrace Model Testing Tool")
+    parser = argparse.ArgumentParser(description="Kautilya Model Testing Tool")
     parser.add_argument("--txid", type=int, help="Transaction ID from dataset to test")
     parser.add_argument("--model", choices=["M1", "M2", "M3"], default="M1", help="Model version to test (default M1)")
     parser.add_argument("--random", action="store_true", help="Pick a random transaction from the test set")
