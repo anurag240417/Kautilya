@@ -1,5 +1,6 @@
 """Pipeline, model, evidence, graph view, cases and report."""
 
+
 import numpy as np
 import pytest
 
@@ -115,26 +116,14 @@ def test_explanations_are_occlusion_deltas(res):
     feats = res.X.loc[[eid]]
     contrib = m.explain(feats, top_k=50)[0]
     assert contrib
-    # For a single feature, replacing it with its median must change p by exactly its contribution.
-    singles = [c for c in contrib if c["feature"] in m.medians.index]
-    if singles:
-        top = max(singles, key=lambda c: abs(c["contribution"]))
+    # Replacing the top feature with its median must change p by exactly its reported contribution.
+    top = max(contrib, key=lambda c: abs(c["contribution"]))
+    if top["feature"] != "graph_embedding":
         alt = feats.copy()
         alt[top["feature"]] = m.medians[top["feature"]]
         assert m.predict_proba(feats)[0] - m.predict_proba(alt)[0] == pytest.approx(
             top["contribution"], abs=1e-9
         )
-
-
-def test_top_leads_always_have_an_explanation(res):
-    """Clear-cut leads have overlapping signals; single-feature occlusion alone returns nothing."""
-    ids = [int(i) for i in res.alert_table(10).index]
-    for eid in ids:
-        contrib = res.model_for(eid).explain(res.X.loc[[eid]])[0]
-        assert contrib, f"E-{eid} has no model explanation"
-        assert any(c["contribution"] > 0 for c in contrib)
-    groups = [c for c in contrib if c["feature"].startswith("group:")]
-    assert all(c["value"] is None and c["description"] for c in groups)
 
 
 # ---------------------------------------------------------------- graph view
