@@ -1,19 +1,23 @@
-# ChainTrace
+# Kautilya
 
 > **Blockchain & Network Forensics Platform**
 > Built for Smart India Hackathon (SIH)
+>
+> *Named after Kautilya (Chanakya), author of the Arthashastra, the ancient Indian treatise on statecraft that
+> covers how a state audits its accounts and detects the misuse of public funds.*
 
-ChainTrace is an investigative decision-support system that synthesizes blockchain transaction data, network observations, temporal patterns, graph topology, and machine-learning signals to assist investigators in identifying and prioritizing suspicious cryptocurrency activity.
+Kautilya is an investigative decision-support system that synthesizes blockchain transaction data, network observations, temporal patterns, graph topology, and machine-learning signals to assist investigators in identifying and prioritizing suspicious cryptocurrency activity.
 
-ChainTrace provides **probative triage rankings** and **structured evidence ledgers**, explicitly distinguishing raw observations from inferences and honoring the presumption of innocence.
+Kautilya provides **probative triage rankings** and **structured evidence ledgers**, explicitly distinguishing raw observations from inferences and honoring the presumption of innocence.
 
 ---
 
 ## Key Capabilities
 
+- **Seed-Based Risk Propagation**: Start from known-illicit wallets (a watch list, or leads an analyst confirmed) and spread risk through the money-flow graph with personalised PageRank. Every alert shows its distance to the nearest seed ("2 hops from known-illicit E-1234"). Exchange-style hubs absorb risk instead of passing it on.
 - **Multi-Signal Risk Synthesis**: Combines 6 distinct signal categories (ML Behavioral, Anomaly, Graph Structural, Temporal, Network Correlation, and Known Indicators) into a transparent, configurable investigative priority score without black-box opacity.
 - **Dual ML Architecture**:
-  - **Supervised Classifier (GBM)**: Predicts illicit transaction likelihood with local feature attribution (SHAP-style explanations).
+  - **Supervised Classifier (Random Forest)**: Predicts illicit transaction likelihood with local feature attribution (SHAP-style explanations).
   - **Unsupervised Anomaly Detector (Isolation Forest)**: Identifies statistical deviance from baseline behavior without equating anomalies to criminality.
 - **Graph Forensics Engine**: Multi-hop ego-graph extraction, hub-and-spoke mixer detection, and shortest-path transaction tracing between suspicious entities.
 - **Correlation & Temporal Analysis**: Links temporal bursts and network-layer observations (IP/ASN/GeoIP) with confidence scores and explicit uncertainty bounds.
@@ -39,7 +43,7 @@ ChainTrace provides **probative triage rankings** and **structured evidence ledg
 ┌──────┴───┐ ┌────┴────┐ ┌───┴────┐ ┌───┴────┐ ┌───┴────┐ ┌───┴────┐
 │ Ingest   │ │ ML      │ │ Risk   │ │ Graph  │ │ Correl │ │ Evidence│
 │ Pipeline │ │ Engine  │ │ Engine │ │ Engine │ │ Engine │ │ Ledger  │
-│ (Audit/  │ │ (GBM +  │ │ (Multi-│ │ (Ego/  │ │ (IP/   │ │ (Audited│
+│ (Audit/  │ │ (RF +   │ │ (Multi-│ │ (Ego/  │ │ (IP/   │ │ (Audited│
 │ Validate)│ │ IsoFor) │ │ Signal)│ │ Trace) │ │ Time)  │ │ Trails) │
 └──────┬───┘ └────┬────┘ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘
        │          │          │          │          │          │
@@ -104,7 +108,7 @@ npm run dev        # For Vite HMR dev server
 
 ## Live Demo: Operation Shadow Mixer
 
-ChainTrace includes a pre-seeded, realistic investigation scenario named **"Operation Shadow Mixer"**:
+Kautilya includes a pre-seeded, realistic investigation scenario named **"Operation Shadow Mixer"**:
 
 1. **Source Transaction (TX 1001)**: High-risk darknet transfer (50.0 BTC) to a known mixing hub.
 2. **Mixer Entity (`1MixService...`)**: High-degree mixing service with multiple incoming and outgoing peels.
@@ -120,7 +124,7 @@ Refer to [`docs/demo_script.md`](docs/demo_script.md) for the complete demonstra
 
 ### Automated Test Suite
 
-ChainTrace maintains an extensive test suite covering unit, integration, validation, and end-to-end pipeline flows:
+Kautilya maintains an extensive test suite covering unit, integration, validation, and end-to-end pipeline flows:
 
 ```bash
 pytest
@@ -139,7 +143,7 @@ python benchmarks/bench_core.py
 Compares rules-only, logistic regression, Isolation Forest, Random Forest, and the fused risk score on the same out-of-time test rows. Reports PR-AUC, precision@k, recall@k, lift, false-positive rate, bootstrap 95% CIs, rolling-origin stability, and robustness to noisy or missing features.
 
 ```bash
-python -m scripts.run_benchmark              # needs Elliptic++ under CHAINTRACE_DATASET_DIR
+python -m scripts.run_benchmark              # needs Elliptic++ under KAUTILYA_DATASET_DIR
 python -m scripts.run_benchmark --smoke-test # pipeline check on random data, numbers meaningless
 ```
 
@@ -158,7 +162,7 @@ python -m backend.forensics.report verify report.html                   # verify
 docker compose up --build                                               # Linux container, offline at runtime
 ```
 
-Docs: [technical write-up](docs/FORENSICS_LAB.md), [ethics and limits](docs/ETHICS_AND_LIMITS.md), [submission pitch and Q&A](docs/SUBMISSION_IDEA2.md), [GeoIP/Tor setup](docs/GEOIP_SETUP.md), [official dataset guide](docs/OFFICIAL_DATASET.md). Results: `reports/BENCHMARK.md` (real Elliptic++), `reports/FORENSICS_BENCHMARK.md` (synthetic), `reports/SCALE_TEST.md`.
+Docs: [technical write-up](docs/FORENSICS_LAB.md), [ethics and limits](docs/ETHICS_AND_LIMITS.md), [submission pitch and Q&A](docs/SUBMISSION_IDEA2.md), [GeoIP/Tor setup](docs/GEOIP_SETUP.md), [dataset guide](docs/OFFICIAL_DATASET.md). Results: `reports/BENCHMARK.md` (real Elliptic++), `reports/FORENSICS_BENCHMARK.md` (synthetic), `reports/SCALE_TEST.md`.
 
 ### Zero Runtime Network Dependency Audit
 
@@ -184,7 +188,7 @@ python scripts/verify_offline.py
 
 ## Technology Stack
 
-- **Backend**: Python 3.11+, WSGI standard library, Pydantic v2, NetworkX, Scikit-learn, LightGBM
+- **Backend**: Python 3.11+, WSGI standard library, Pydantic v2, NetworkX, Scikit-learn
 - **Frontend**: React 18, Vite, Lucide Icons, Vanilla CSS (modular design tokens)
 - **Data & Testing**: Pytest, NumPy, Pandas
 - **Packaging**: PEP 621 (`pyproject.toml`)
@@ -193,6 +197,5 @@ python scripts/verify_offline.py
 
 ## License & Forensic Ethics
 
-ChainTrace is developed strictly as an investigative decision-support tool. It presents probabilistic rankings, anomalies, and structural indicators with explicit uncertainty metrics. It does not replace judicial oversight or legal due process.
-#   C h a i n - T r a c e  
- 
+Kautilya is developed strictly as an investigative decision-support tool. It presents probabilistic rankings, anomalies, and structural indicators with explicit uncertainty metrics. It does not replace judicial oversight or legal due process.
+#
