@@ -40,7 +40,85 @@ EXTRA_DESCRIPTIONS = {
 }
 
 
+# Feature families for group-level explanations. Many signals overlap (a layering chain also means
+# fast pass-through and Tor use), so removing one feature rarely changes the score; removing or
+# adding a whole family does.
+FAMILY_PREFIX = "group:"
+FAMILIES: dict[str, tuple[str, list[str]]] = {
+    "structural": (
+        "laundering patterns (peel chains, rapid-hop layering, dust, CoinJoin)",
+        [
+            "coinjoin_txs",
+            "dust_spray_txs",
+            "peel_chain_txs",
+            "layering_chain_txs",
+            "consolidation_txs",
+            "batch_payout_txs",
+            "max_peel_chain_len",
+            "max_layering_chain_len",
+        ],
+    ),
+    "network": (
+        "network origin (Tor, hosting/VPN, IP and country behaviour)",
+        [
+            "tor_share",
+            "vpn_share",
+            "n_origin_ips",
+            "n_origin_countries",
+            "top_ip_share",
+            "rapid_geo_hops",
+            "network_obfuscation",
+        ],
+    ),
+    "timing": (
+        "timing (how fast funds move, bursts of activity)",
+        [
+            "active_hours",
+            "burstiness",
+            "median_gap_s",
+            "peak_hour_events",
+            "peak_hour_share",
+            "median_dwell_s",
+            "rapid_spend_share",
+        ],
+    ),
+    "flow": (
+        "money flow (pass-through, volumes, counterparties)",
+        [
+            "pass_through_ratio",
+            "recv_to_sent_txs",
+            "total_sent_btc",
+            "total_recv_btc",
+            "mean_sent_btc",
+            "std_sent_btc",
+            "mean_recv_btc",
+            "flow_out_btc",
+            "max_single_out_btc",
+            "in_degree",
+            "out_degree",
+            "n_sent_txs",
+            "n_recv_txs",
+            "n_events",
+            "mean_n_out_sent",
+            "max_n_out_sent",
+            "mean_n_in_sent",
+            "max_n_in_sent",
+            "round_payment_share",
+            "dust_received",
+            "recv_amount_cv",
+            "n_addresses",
+        ],
+    ),
+    "graph": (
+        "position in the money-flow graph (who it transacts with)",
+        [*PROP_COLUMNS],
+    ),
+}
+
+
 def describe_feature(name: str) -> str:
+    if name.startswith(FAMILY_PREFIX):
+        return FAMILIES[name.removeprefix(FAMILY_PREFIX)][0]
     return FEATURE_DESCRIPTIONS.get(name) or EXTRA_DESCRIPTIONS.get(name, name.replace("_", " "))
 
 
@@ -170,28 +248,53 @@ class EntityModel:
             B = A.copy()
             B[:, idx] = med[idx]
             contrib[:, j] = base_p - self.calibrator.predict(self.rf.predict_proba(B)[:, 1])
+        # Family-level contributions: average of (a) removing the family from this entity and
+        # (b) adding the family to a typical entity. Stays informative when signals overlap.
+        fam_names, fam_contrib = [], []
+        base_all = np.tile(med, (len(X), 1))
+        p_typical = self.calibrator.predict(self.rf.predict_proba(base_all)[:, 1])
+        for fname, (_, cols) in FAMILIES.items():
+            members = list(cols) + (
+                list(self.emb_cols) if fname == "graph" and self.use_embeddings else []
+            )
+            idx = [col_idx[c] for c in members if c in col_idx]
+            if not idx:
+                continue
+            removed = A.copy()
+            removed[:, idx] = med[idx]
+            added = base_all.copy()
+            added[:, idx] = A[:, idx]
+            d_out = base_p - self.calibrator.predict(self.rf.predict_proba(removed)[:, 1])
+            d_in = self.calibrator.predict(self.rf.predict_proba(added)[:, 1]) - p_typical
+            fam_names.append(FAMILY_PREFIX + fname)
+            fam_contrib.append((d_out + d_in) / 2.0)
+        fam_contrib = np.array(fam_contrib).T if fam_contrib else np.zeros((len(X), 0))
+
         out = []
         for i in range(len(X)):
-            order = np.argsort(-np.abs(contrib[i]))[:top_k]
             row = X.iloc[i]
             items = []
-            for j in order:
-                name = names[j]
-                if abs(contrib[i, j]) < 0.005:
-                    continue
-                items.append(
+            for j in range(len(names)):
+                if abs(contrib[i, j]) >= 0.005:
+                    items.append((names[j], contrib[i, j]))
+            for j in range(len(fam_names)):
+                if abs(fam_contrib[i, j]) >= 0.005:
+                    items.append((fam_names[j], fam_contrib[i, j]))
+            items.sort(key=lambda t: -abs(t[1]))
+            rows = []
+            for name, c in items[:top_k]:
+                is_group = name == EMB_GROUP or name.startswith(FAMILY_PREFIX)
+                rows.append(
                     {
                         "feature": name,
                         "description": describe_feature(name),
-                        "value": None if name == EMB_GROUP else _clean(row.get(name)),
-                        "typical_value": None
-                        if name == EMB_GROUP
-                        else _clean(self.medians.get(name)),
-                        "contribution": float(contrib[i, j]),
-                        "direction": "raises risk" if contrib[i, j] > 0 else "lowers risk",
+                        "value": None if is_group else _clean(row.get(name)),
+                        "typical_value": None if is_group else _clean(self.medians.get(name)),
+                        "contribution": float(c),
+                        "direction": "raises risk" if c > 0 else "lowers risk",
                     }
                 )
-            out.append(items)
+            out.append(rows)
         return out
 
 
