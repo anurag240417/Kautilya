@@ -15,6 +15,30 @@ import { getEntityColor } from '../utils/colors';
  * Deep-dive on one wallet/transaction/IP.
  * Behavioral statistics, direct connections, aggregation traceability, and mini-graph.
  */
+/**
+ * The wallet API returns { aggregated_score, aggregation_method, transaction_count,
+ * flagged_transaction_count, contributing_transactions: [{ txid, risk_score, ... }] }.
+ * Normalise to the shape this page renders (and tolerate the older shape too).
+ */
+function normalizeAggregation(a) {
+  if (!a) return null;
+  const rows = a.contributing_transactions || a.contributing_scores || [];
+  return {
+    ...a,
+    score: Number(a.aggregated_score ?? a.score ?? 0),
+    method: a.aggregation_method ?? a.method ?? '',
+    contributing_transaction_count: a.transaction_count ?? a.contributing_transaction_count ?? rows.length,
+    flagged_transaction_count: a.flagged_transaction_count ?? 0,
+    summary: a.tier_description ?? a.summary ?? '',
+    contributing_scores: rows.map((c) => ({
+      ...c,
+      transaction_id: c.txid ?? c.transaction_id,
+      score: Number(c.risk_score ?? c.score ?? 0),
+      is_synthetic: c.contains_synthetic ?? c.is_synthetic ?? false,
+    })),
+  };
+}
+
 export default function EntityProfile() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -42,7 +66,7 @@ export default function EntityProfile() {
         } else {
           result = await getWallet(activeId, aggregationMethod);
         }
-        setData(result);
+        setData(activeType === 'wallet' && result ? { ...result, aggregation: normalizeAggregation(result.aggregation) } : result);
 
         // Fetch mini ego-graph
         try {
@@ -244,7 +268,7 @@ export default function EntityProfile() {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div style={{ fontSize: '13px', color: 'var(--ct-text-primary)' }}>
-                  Aggregated Score: <strong style={{ fontFamily: 'var(--ct-font-mono)' }}>{data.aggregation.score.toFixed(1)}</strong> via <code>{data.aggregation.method}</code> across {data.aggregation.contributing_transaction_count} transactions.
+                  Aggregated Score: <strong style={{ fontFamily: 'var(--ct-font-mono)' }}>{data.aggregation.score.toFixed(1)}</strong> via <code>{data.aggregation.method}</code> across {data.aggregation.contributing_transaction_count} transactions ({data.aggregation.flagged_transaction_count} flagged).
                 </div>
 
                 {data.aggregation.contributing_scores && data.aggregation.contributing_scores.length > 0 ? (

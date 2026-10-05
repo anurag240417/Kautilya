@@ -354,6 +354,15 @@ export default function ForensicsLab() {
 
   useEffect(() => { if (status?.loaded) loadAlerts(); }, [loadAlerts, status?.loaded]);
 
+  // Deep links: #/forensics?entity=4094&tab=graph opens that lead directly (handy for demos and screenshots).
+  useEffect(() => {
+    const id = searchParams.get('entity');
+    const t = searchParams.get('tab');
+    if (t && ['evidence', 'graph', 'model'].includes(t)) setTab(t);
+    if (id && status?.loaded && /^[0-9]+$/.test(id)) openEntity(Number(id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status?.loaded]);
+
   const openEntity = useCallback(async (id) => {
     setSelected(id);
     setEntity(null);
